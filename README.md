@@ -4,6 +4,9 @@ Written by Erik Bjorgan based on a core concept from David Shealey.
 With love to the Prusa Community forum and its incredible admin team.
 http://facebook.com/groups/prusacommunity
 
+# This tool is quite experimental, and probably always will be.  Use it at your own risk! 
+At the time of writing this, the only version of Slic3r which has been tested is 1.41.2+linux64.   While it is possible that it may work with other versions of Slic3r, please do not assume this to be the case, as any changes to the gcode structure expected by this script could lead to gcode that has unintended effects, some of which may be dangerous.   If you choose to use this, understand that you're a guinea pig. 
+
 ## Purpose:
 This script is used to eliminate the stubborn threads of filament that
 can jam the MMU2 during toolchanges  by providing a brief secondary dip
