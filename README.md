@@ -1,7 +1,7 @@
 # SKINNYDIP MMU2 string eliminator
 a post processing script for Slic3r PE to remove fine threads from filament tips during MMU2 toolchanges.
 Written by Erik Bjorgan based on a core concept from David Shealey.
-With love to the Prusa Community forum and its incredible admin team.
+With love to the Prusa Community Forum and its incredible admin team.
 http://facebook.com/groups/prusacommunity
 
 # This tool is quite experimental, and probably always will be.  Use it at your own risk! 
@@ -36,7 +36,7 @@ M900 K{if printer_notes=~/.*PRINTER_HAS_BOWDEN.*/}200{else}30{endif}; Filament g
 ```
 
 ## Explanation of configuration parameters:
-| Parameter          | Explanation                                              | Default Value |
+|Parameter          |Explanation                                              |Default Value |
 |--------------------|----------------------------------------------------------|---------------|
 material_type     | Name of type of material                                    | n/a
 material_name     | User defined name for this filament                         | n/a
