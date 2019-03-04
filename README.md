@@ -33,7 +33,7 @@ material_type     | Name of type of material
 material_name     | User defined name for this filament
 insertion_speed   | Speed (mm/m) at which the filament enters the melt zone after cooling moves are finished. default        speed is 2000mm/m 
 extraction_speed  | Speed (mm/m) at which the filament leaves the melt zone.  Faster is generally better (4000mm/min)           
-insertion_pause   | Number of milliseconds to dwell in the melt zone before extracting the filament.  0 is the default.              insertion_distance| Distance in mm for filament to be inserted into the melt zone.  This is hardware specific, and shouldn't change very much from one material to the next.  31mm is the default setting (tested on BMG extruder).  If blobs appear on the wipe tower, this setting is probably too high.                                                    |
+insertion_pause   | Number of milliseconds to pause in the melt zone before extracting the filament.  0 is the default.              insertion_distance| Distance in mm for filament to be inserted into the melt zone.  This is hardware specific, and shouldn't change very much from one material to the next.  31mm is the default setting (tested on BMG extruder).  If blobs appear on the wipe tower, this setting is probably too high.                                                    |
 removal_pause     | Number of milliseconds to pause in the cooling zone prior to extracting filament from hotend.  This pause can be helpful to allow the filament to cool prior to being handled by the bondtech gears.                           |
                   
 ## Goals:
