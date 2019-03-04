@@ -5,7 +5,7 @@ With love to the Prusa Community Forum and its incredible admin team.
 http://facebook.com/groups/prusacommunity
 
 # This tool is quite experimental, and probably always will be.  Use it at your own risk! 
-Builds tested:
+Tested with the following versions of Slic3r PE:
 * 1.41.2+linux64
 * 1.42.0-alpha7+linux64
 
