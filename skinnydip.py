@@ -32,7 +32,7 @@ import os
 import time
 from shutil import copyfile
 
-VERSION = "0.1.2 beta"
+VERSION = "0.1.3 beta"
 TOOL_LIST = ["T0", "T1", "T2", "T3", "T4"] 
 DEFAULT_SETTINGS={
         "material_type":       "PLA",
@@ -89,13 +89,13 @@ def get_dip_gcode(toolnumber, settingsdict):
     dip_gcode += ";*****SKINNYDIP THREAD REDUCTION*****************\n"
     dip_gcode += "; Tool(" + toolnumber + "), " + material_type+"/"\
                     + material_name+"\n"
-    if int(insertion_distance) > 0 and int(insertion_speed) > 0:
+    if float(insertion_distance) > 0 and float(insertion_speed) > 0:
         dip_gcode += "G1 E" + insertion_distance + " F" + insertion_speed +\
                      "    ;move stringy tip into melt zone\n"
     if int(insertion_pause)>0:
         dip_gcode += "G4 P" + insertion_pause+"        ; pause in melt zone\n"
 
-    if int(insertion_distance) > 0 and int(extraction_speed) > 0:
+    if float(insertion_distance) > 0 and float(extraction_speed) > 0:
         dip_gcode += "G1 E-" + insertion_distance + " F" + extraction_speed+\
                       "   ;extract clean tip from melt zone\n"
     if int(removal_pause)>0:
@@ -252,12 +252,12 @@ def build_output(text, settingsdict, tc_list, ins_index, ins_positions):
 def cleanSettings(ds):
     for tool in TOOL_LIST:
         for setting in SAFE_RANGE:
-            if int(ds[tool][setting]) < SAFE_RANGE[setting][0]:
+            if float(ds[tool][setting]) < SAFE_RANGE[setting][0]:
                 print "  Minimum setting "+setting+" for "+\
                       tool+" enforced: "+str(SAFE_RANGE[setting][0])
                 ds[tool][setting] = SAFE_RANGE[setting][0]
 
-            if int(ds[tool][setting]) > SAFE_RANGE[setting][1]:
+            if float(ds[tool][setting]) > SAFE_RANGE[setting][1]:
                 print "  Maximum setting "+setting+" for "+\
                       tool+" enforced: "+str(SAFE_RANGE[setting][1])
                 ds[tool][setting] = SAFE_RANGE[setting][1]
