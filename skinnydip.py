@@ -32,7 +32,7 @@ import os
 import time
 from shutil import copyfile
 
-VERSION = "0.11b"
+VERSION = "0.1.2 beta"
 TOOL_LIST = ["T0", "T1", "T2", "T3", "T4"] 
 DEFAULT_SETTINGS={
         "material_type":       "PLA",
@@ -65,8 +65,11 @@ SET_ITEMS=["material_type", "material_name", "insertion_speed",
            "extraction_speed", "insertion_pause", "insertion_distance", 
            "removal_pause"]
 ASSOCIATE_TOOL_WITH_SETTINGS_REGEX = r"(?<=(T[01234]\n))(\w|\d|\n|[().,\-:;@#$%^&*\[\]\"'+–/\/®°⁰!?{}|`~]| )+?(?=(SKINNYDIP CONFIGURATION END))"
-COOLING_MOVE_REGEX = r"G1 E.*\nG1.*\nG4 S0\nT[0-4]" 
-TOOLCHANGE_REGEX = r"\nT[0-4]\n"  
+#COOLING_MOVE_REGEX = r"G1 E.*\nG1.*\nG4 S0\nT[0-4]" 
+COOLING_MOVE_REGEX = r"G1 E.*\nG1.*\nG4 S0\n((T[0-4])|(M220 R))" 
+TOOLCHANGE_REGEX = r"\nT[0-4]\n"
+FINAL_TOOLCHANGE_REGEX = r"G1 E.*\nG1.*\nG4 S0\n(M2)20 R"
+
 
 
 class CustomError(Exception):
@@ -169,13 +172,40 @@ def index_toolchanges(gcode_str):
     tc_list = []
     matches = re.finditer(TOOLCHANGE_REGEX, gcode_str, re.MULTILINE)
     prev_tool = None
+    
     for matchNum, match in enumerate(matches, start=1):
         matchpos = int(match.start()) + 1  #add 1 because of initial newline
         matchcontents = str(match.group()).strip()
-
         tc_dict[matchpos]={'new_tool' : matchcontents,
                 'current_tool' : prev_tool}
         prev_tool = matchcontents
+        tc_list.append(matchcontents)
+        #pprint.pprint(tc_dict)
+        #pprint.pprint(tc_list)
+    
+    #final tool removal doesn't match the regular pattern.
+    #There is also no toolchange lookup possible because there
+    #is no actual toolchange here.  So we have to fake one.
+
+    final=re.search(FINAL_TOOLCHANGE_REGEX, gcode_str) 
+    #look up the capture group at index 1, pad so the lookup will
+    #find a value to use
+    finalpos=int(final.start(1))+4
+
+    #sanity check, line should contain M220 R
+    if str(final.group(1)) != "M2":
+        raise CustomError("Error with final toolchange.  Unexpected value"+
+                          str(final.group(1)))
+    else:
+        tc_dict[finalpos]={"new_tool" : "end",
+                           "current_tool" : prev_tool}
+
+        
+        
+
+
+
+
     return tc_dict
 
 
@@ -272,6 +302,8 @@ def main():
         print "Done"
         print "Searching for gcode injection locations...",
         ins_index , ins_positions  = index_insertion_points(text)
+        print "\n\nMake sure final toolchange is in here!"
+        pprint.pprint(ins_index)
         print "Done"
         print "Building post processed file..."
         out = build_output(text, settingsdict, tc_list, ins_index, ins_positions)
