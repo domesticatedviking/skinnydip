@@ -17,10 +17,24 @@ can jam the MMU2 during toolchanges  by providing a brief secondary dip
 into the melt zone immediately after the cooling moves complete.   
 
 ## Installation:
+### Dependencies
+This script requires Python 2.7.  Linux users won't need to install anything.  Windows users can download v2.7.16 at https://www.python.org/downloads/ 
+
+### Windows
+Copy skinnydip.py to any folder eg ```C:\my\folder\skinnydip.py```
+Unless python is in your system path you may need to find its location as well eg ```C:\python27\python.exe```
+
+In Slic3rPE > Print Settings > Output Options > Post Processing Scripts, use the following:
+
+```C:\python27\python.exe C:\my\folder\skinnydip.py```
+
+
+
+### Linux
 In Slic3r PE, provide the absolute path to the skinnydip.py script in Print Settings > Output Options > Post-processing scripts.   
-eg.  /home/username/some_folder/skinnydip.py 
+eg.  ```/home/username/some_folder/skinnydip.py```
 ##### Known issue with installation on Linux appimage builds
-At the time of this initial release Linux appimage builds of SLic3r PE are misconfigured in a way that prevents running Python scripts directly.  Use skinnydip_appimage_workaround.sh in the post processing script field instead.
+At the time of this initial release Linux some appimage builds of Slic3r PE are misconfigured in a way that prevents running Python scripts directly.  Use ```/home/username/skinnydip_appimage_workaround.sh``` in the post processing script field instead.  This script should be located in the same folder as skinnydip.py
 
 ## Usage:
 The script is configurable via comments made in the filament profile's start gcode section 
