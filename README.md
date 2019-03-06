@@ -4,7 +4,7 @@ Written by Erik Bjorgan based on a core concept from David Shealey.
 With love to the Prusa Community Forum and its incredible admin team.
 http://facebook.com/groups/prusacommunity
 
-# This tool is quite experimental, and probably always will be.  Use it at your own risk! 
+# This tool is quite experimental.  It is still being tested, and bugs are still being collected.  Use it at your own risk! 
 Tested with the following versions of Slic3r PE:
 * 1.41.2+linux64
 * 1.42.0-alpha7+linux64
@@ -51,6 +51,7 @@ M900 K{if printer_notes=~/.*PRINTER_HAS_BOWDEN.*/}200{else}30{endif}; Filament g
 ; insertion_pause 0 
 ; insertion_distance 31 
 ; removal_pause 0
+; toolchange_temp 0
 ; SKINNYDIP CONFIGURATION END
 ```
 
@@ -63,7 +64,8 @@ insertion_speed   | Speed at which the filament enters the melt zone after cooli
 extraction_speed  | Speed at which the filament leaves the melt zone.  Faster is generally better | 4000 (mm/min)           
 insertion_pause   | Time to pause in the melt zone before extracting the filament.| 0 (milliseconds) |
 insertion_distance| Distance in mm for filament to be inserted into the melt zone.  This is hardware specific, and shouldn't change very much from one material to the next.  If blobs appear on the wipe tower, this setting is probably too high. | 31 (mm)                       
-removal_pause     | Number of milliseconds to pause in the cooling zone prior to extracting filament from hotend.  This pause can be helpful to allow the filament to cool prior to being handled by the bondtech gears. |  0 (milliseconds)   
+removal_pause     | Number of milliseconds to pause in the cooling zone prior to extracting filament from hotend.  This pause can be helpful to allow the filament to cool prior to being handled by the bondtech gears. |  0 (milliseconds)
+toolchange_temp   | Temperature to extract filament from the hotend.  Cooler temperatures are associated with better tips. | N/A
                   
 ## Goals:
 This method is highly effective for removing fine strings of filament.
