@@ -33,7 +33,7 @@ import time
 from shutil import copyfile
 
 #  CONSTANTS ************************************************
-VERSION = "0.3.0 beta"
+VERSION = "0.3.1 alpha"
 TOOL_LIST = ["T0", "T1", "T2", "T3", "T4"] 
 DEFAULT_SETTINGS={
         "material_type":       "PLA",
@@ -267,7 +267,8 @@ def index_temperature_change_positions(gcode_str, tool_sequence, settingsdict):
         toolchange_number=int(match.group('toolchange_number'))
         tool=tool_sequence[toolchange_number + SEQ_SHIFT]
         toolchange_temp=settingsdict[tool]['toolchange_temp']
-        temper_change_gcode="M104 S"+str(toolchange_temp)+" ;***SKINNYDIP Toolchange Temperature Adjustment***\n" 
+        temper_change_gcode="M104 S"+str(toolchange_temp)+" ;***SKINNYDIP Toolchange Temperature Adjustment for "+\
+                            tool+"***\n" 
 
         temper_details={'toolchange_number': toolchange_number,
                         'tool' : tool,
@@ -339,11 +340,9 @@ def build_output(text, settingsdict, tc_list, dip_index, dip_positions, temper_i
         
 
         dipmatch=False
-        tempermatch=False
         try:
             #check if current pos is indexed as an insertion point.
             dipmatch = (i == dip_positions[current_insertion])
-            tempermatch= (i == temper_positions[current_insertion])
         except Exception, e:
             pass
 
@@ -366,8 +365,14 @@ def build_output(text, settingsdict, tc_list, dip_index, dip_positions, temper_i
                 out += addtext +str(text[i])
                 i += 1
                 current_insertion += 1
+        
+        tempermatch=False
+        try:
+            tempermatch= (i == temper_positions[current_insertion])
+        except Exception, e:
+            pass
 
-        elif tempermatch:
+        if tempermatch:
             #INJECT TEMPDROP CODE
             addtext=""
             #retrieve the previously saved text (goes after the insertion)
@@ -379,7 +384,7 @@ def build_output(text, settingsdict, tc_list, dip_index, dip_positions, temper_i
             current_insertion += 1
 
 
-        else:
+        if not(dipmatch) and not(tempermatch):
             out += str(text[i])
             i += 1
     return out
