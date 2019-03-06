@@ -63,7 +63,7 @@ material_name     | User defined name for this filament                         
 insertion_speed   | Speed at which the filament enters the melt zone after cooling moves are finished. | 2000 (mm/min)
 extraction_speed  | Speed at which the filament leaves the melt zone.  Faster is generally better | 4000 (mm/min)           
 insertion_pause   | Time to pause in the melt zone before extracting the filament.| 0 (milliseconds) |
-insertion_distance| Distance in mm for filament to be inserted into the melt zone.  This is hardware specific, and shouldn't change very much from one material to the next.  If blobs appear on the wipe tower, this setting is probably too high. | 31 (mm)                       
+insertion_distance| Distance in mm for filament to be inserted into the melt zone.  This is hardware specific, and shouldn't change very much from one material to the next.  If blobs appear on the wipe tower, this setting is probably too high. For stock extruder users, David reports that  (Cooling Tube Position+(0.5 * Cooling tube length)) - 1.5) is a good value to use here.  Automatic calculation of this value is on the todo list  | 31 (mm)                       
 removal_pause     | Number of milliseconds to pause in the cooling zone prior to extracting filament from hotend.  This pause can be helpful to allow the filament to cool prior to being handled by the bondtech gears. |  0 (milliseconds)
 toolchange_temp   | Temperature to extract filament from the hotend.  Cooler temperatures are associated with better tips. | N/A
                   
