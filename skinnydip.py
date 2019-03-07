@@ -33,7 +33,7 @@ import time
 from shutil import copyfile
 
 #  CONSTANTS ************************************************
-VERSION = "0.4.4 alpha"
+VERSION = "0.4.5 alpha"
 TOOL_LIST = ["T0", "T1", "T2", "T3", "T4"]
 DEFAULT_SETTINGS = {
     "material_type": "NOT CONFIGURED",
@@ -544,14 +544,17 @@ def main(target_file=None):
         file_to_process = target_file
         keep_original = False
     else:
-        file_to_process = args.myFile
         parser = ArgumentParser()
         parser.add_argument(dest="myFile", help="open a file")
         parser.add_argument("--k", "--keep", action='store_true',
                             help="keep copy of original file")
         args = parser.parse_args()
+        file_to_process = args.myFile
         keep_original = args.k
         myFile = args.myFile
+        file_to_process = args.myFile
+
+
 
     if file_to_process is not None:
         inputfilename = os.path.splitext(file_to_process)[0]
@@ -635,7 +638,8 @@ def main(target_file=None):
         raise
 
 
-test_input_filename = "01xx4.gcode"
+#test_input_filename = "01xx4.gcode"
+test_input_filename = None
 target_file=None
 resource_path = "/home/erik/PycharmProjects/skinnydip/testobjects/"
 project_path = "/home/erik/PycharmProjects/skinnydip/"
@@ -643,4 +647,4 @@ if test_input_filename is not None:
     copyfile(resource_path+test_input_filename, project_path+test_input_filename)
     target_file=project_path+test_input_filename
 
-main(target_file)
+main(None)
