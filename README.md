@@ -52,6 +52,8 @@ M900 K{if printer_notes=~/.*PRINTER_HAS_BOWDEN.*/}200{else}30{endif}; Filament g
 ; insertion_distance 31 
 ; removal_pause 0
 ; toolchange_temp 0
+; beep_on_dip 0
+; beep_on_temp 0
 ; SKINNYDIP CONFIGURATION END
 ```
 
@@ -66,6 +68,8 @@ insertion_pause   | Time to pause in the melt zone before extracting the filamen
 insertion_distance| Distance in mm for filament to be inserted into the melt zone.  This is hardware specific, and shouldn't change very much from one material to the next.  If blobs appear on the wipe tower, this setting is probably too high. For stock extruder users, David reports that  (Cooling Tube Position+(0.5 * Cooling tube length)) - 1.5) is a good value to use here.  Automatic calculation of this value is on the todo list  | 31 (mm)                       
 removal_pause     | Number of milliseconds to pause in the cooling zone prior to extracting filament from hotend.  This pause can be helpful to allow the filament to cool prior to being handled by the bondtech gears. |  0 (milliseconds)
 toolchange_temp   | Temperature to extract filament from the hotend.  Cooler temperatures are associated with better tips. | N/A
+beep_on_dip       | Play a tone through the printer's speaker to signal when a skinnydip move is taking place (for debug purposes) |0=off, 1=on  |
+beep_on_temp      | Play a tone when a toolchange temperature setting has been applied (for debug purposes)  | 0=off, 1=on|
                   
 ## Goals:
 This method is highly effective for removing fine strings of filament.
