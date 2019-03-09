@@ -101,10 +101,11 @@ import pprint
 import os
 import sys
 import time
+from datetime import datetime
 import shutil
 
 #  CONSTANTS ************************************************
-VERSION = "0.7.1 alpha"
+VERSION = "0.8.0 alpha"
 TEST_FILE = None
 RESOURCE_PATH = "/home/erik/PycharmProjects/skinnydip/testobjects/"
 PROJECT_PATH = "/home/erik/PycharmProjects/skinnydip/"
@@ -151,7 +152,11 @@ TOOLCHANGE_TEMP_SAFE_RANGE = [150, 295]
 SET_ITEMS = NULL_SETTINGS_DICT.keys()
 VARS_FROM_SLIC3R_GCODE = ['cooling_tube_length', 'cooling_tube_retraction',
                           'extra_loading_move', 'parking_pos_retraction']
-INSERTIONS_REGEX=r"(?P<temp_pause>G1 E-.*\n)(?:G1 E-.*\n){1,}(?P<temp_restore>G1[^E].*\n)(M104 S(?P<filament_temp>\d\d\d))?(.*\n){1,20}(?P<dip_pos>G1 E-).*\n(.*\n){1,5}(?P<new_tool>T\d)"
+#M73 tolerant
+INSERTIONS_REGEX = r"(?P<temp_pause>G1 E-.*\n)((G1 E-|M73).*\n){2,7}(M104 S(?P<filament_temp>.*)\n)?(?P<temp_restore>G1 [^E].*\n)(?:.*\n){1,20}(?P<dip_pos>G1 E-).*\n(.*\n){1,5}(?P<new_tool>T\d)"
+#INSERTIONS_REGEX =r"(?P<temp_pause>G1 E-.*\n)(.*\n){2,10}(M104 S(?P<filament_temp>\d\d\d)\n)?(?P<temp_restore>G1 [^E].*\n)(.*\n){1,20}(?P<dip_pos>G1 E-).*\n(.*\n){1,5}(?P<new_tool>T\d)"
+#INSERTIONS_REGEX = r"(?P<temp_pause>G1 E-.*\n)(?:G1 E-.*\n){1,}(M104 S(?P<filament_temp>\d\d\d)\n)?(?P<temp_restore>G1 [^E].*\n)(.*\n){1,20}(?P<dip_pos>G1 E-).*\n(.*\n){1,5}(?P<new_tool>T\d)"
+#INSERTIONS_REGEX=r"(?P<temp_pause>G1 E-.*\n)(?:G1 E-.*\n){1,}(?P<temp_restore>G1[^E].*\n)(M104 S(?P<filament_temp>\d\d\d))?(.*\n){1,20}(?P<dip_pos>G1 E-).*\n(.*\n){1,5}(?P<new_tool>T\d)"
 DOWN_BEEP = "M300 S5742 P195 ;downbeep\nM300 S3830 P95  ;downbeep\nM300 S1912 P95  ;downbeep\n"
 UP_BEEP = "M300 S1912 P95  ;upbeep\nM300 S3830 P95  ;upbeep\nM300 S5742 P195 ;upbeep\n"
 TEMP_BEEP = ["M300 S3038 P155 ;temp_beep\n","M300 S2550 P75 ;temp_beep\n"]
@@ -166,6 +171,7 @@ TOOLCHANGE_REGEX = r"(?P<tool>^T[01234]$)"
 FINAL_TOOLCHANGE_REGEX = r"G1 E.*\nG1.*\nG4 S0\n(?P<final>M2)20 R"  # NEEDS TO BE FIXED -M73
 TEMPERATURE_REGEX = regex = r"; temperature = (...),(...),(...),(...),(...)"
 FIRST_TOOL_SETTINGS_REGEX = r"\n(?P<first_tool>T[0-4])\nM.*\n;.*(SKINNYDIP CONFIGURATION START)\n(?P<config_string>(;.*\n)*)"
+LINEBREAKS_REGEX = r"(?P<linebreak>\n)"
 
 #  GLOBAL ****************************************************
 logtext = ""
@@ -185,6 +191,7 @@ class FileInfo():
         self.target_file = target_file
         self.f = None
         self.text = None
+        self.lines = []
         self.outfile = None
         self.log_file_name = ""
 
@@ -212,16 +219,42 @@ class FileInfo():
         else:
             lprint('No file received as an argument')
 
+    def open_file_lines(self):
+        self.f = open(self.file_to_process)
+        self.lines = self.f.readlines()  #was .f.read()
+
     def open_file(self):
         self.f = open(self.file_to_process)
         self.text = str(self.f.read())
+
     def close_file(self):
         self.f.close()
+        del self.text
+        self.text=""
+
+    def close_file_lines(self):
+        self.f.close()
+        del self.lines
+        self.lines = []
 
     def write_output_file(self, contents):
         lprint("writing output to temporary file: " + self.outputfilename)
         self.outfile = open(self.outputfilename, 'w')
         self.outfile.write(contents)
+        self.outfile.close()
+        if self.keep_original:
+            lprint("renaming original file as " + self.bakfilename)
+            os.rename(self.inputfull, self.bakfilename)
+        else:
+            lprint("deleting original file: " + self.inputfull)
+            os.remove(self.inputfull)
+        lprint("moving post processed output to " + self.inputfull)
+        os.rename(self.outputfilename, self.inputfull)
+
+    def write_output_file_lines(self, contents):
+        lprint("writing output to temporary file: " + self.outputfilename)
+        self.outfile = open(self.outputfilename, 'w')
+        self.outfile.writelines(contents)
         self.outfile.close()
         if self.keep_original:
             lprint("renaming original file as " + self.bakfilename)
@@ -245,17 +278,22 @@ class SetupData():
         self.tool_settings = {}
         self.tc_dict = {}
         self.tc_list = []
+        self.tc_lines = []
         self.toolnumber_sequence = []
         self.dip_index = {}
         self.dip_positions = []
+        self.dip_lines = []
         self.temper_index = {}
         self.temper_positions = []
+        self.temper_lines = []
         self.utool_settings = {}
         self.tool_settings = {}
         self.processed_gcode = ""
         self.target_file = target_file
         self.gcode_vars = {}
+        self.final_insertion_list = []
         self.fileinfo=FileInfo(target_file)
+        self.output_lines = []
 
     def sort_indexes(self):
         #self.temper_index = sorted(self.temper_index)
@@ -274,6 +312,10 @@ class SetupData():
         self.fileinfo.open_file()
         self.gcode_str = self.fileinfo.text
 
+    def open_target_file_lines(self):
+        self.fileinfo.open_file_lines()
+        self.gcode_lines = self.fileinfo.lines
+
     def check_target_file(self):
         if self.gcode_str[:11] == "; SKINNYDIP":
             raise CustomError("File was previously processed by this " + \
@@ -288,8 +330,14 @@ class SetupData():
     def close_target_file(self):
         self.fileinfo.close_file()
 
+    def close_target_file_lines(self):
+        self.fileinfo.close_file_lines()
+
     def write_output_file(self):
         self.fileinfo.write_output_file(self.out)
+
+    def write_output_file_lines(self):
+        self.fileinfo.write_output_file_lines(self.output_lines)
 
     def init_log_file(self, filename):
         self.log_file_name = filename
@@ -477,6 +525,7 @@ def index_dip_insertion_points(d):
     matches = re.finditer(INSERTIONS_REGEX, d.gcode_str, re.MULTILINE)
     for matchNum, match in enumerate(matches, start=1):
         dip_pos = match.start("dip_pos")
+        line_number = d.line_lookup[dip_pos]
         new_tool = match.group("new_tool")
         new_tool_pos = match.start("new_tool")
 
@@ -495,10 +544,13 @@ def index_dip_insertion_points(d):
             previous_tool = d.tc_dict[new_tool_pos]["previous_tool"]
             bundle = {"previous_tool": previous_tool,
                       "new_tool": new_tool,
-                      "new_tool_pos": new_tool_pos
+                      "new_tool_pos": new_tool_pos,
+                      "line_number" : line_number,
+                      "output_gcode": get_dip_gcode(d, previous_tool)
                       }
             d.dip_index[dip_pos] = bundle
             d.dip_positions.append(dip_pos)  # to speed up render process
+            d.dip_lines.append(line_number)
         except Exception, e:
             print str(e)
 
@@ -540,26 +592,101 @@ def add_temp_restore(d,position):
     tool_number = get_tool_from_filepos(d, position)
     print_temp = d.tool_settings[tool_number]['print_temp']
     lprint (str(tool_number) + " temperature " + str(print_temp) + "    restored at pos: " + str(position), False)
-
+    line_number = d.line_lookup[position]
     tempbeep = ["", ""]
     if d.tool_settings[tool_number]["beep_on_temp"] > 0:
         tempbeep = TEMP_BEEP
 
-    temper_change_gcode = ""
+    temper_change_gcode = "; +++++++++++++++++++++++++++++++++++++++++\n"
     temper_change_gcode += tempbeep[1]
     temper_change_gcode += "M104 S" + str(print_temp)
     temper_change_gcode += " ;***SKINNYDIP Restoring temperature for  " + \
                           tool_number + ": " + str(print_temp) + "\n"
+    temper_change_gcode += "; +++++++++++++++++++++++++++++++++++++++++\n"
 
     temper_details = {'toolchange_number': 0,
                       'tool_pos': position,
                       'tool_number': tool_number,
                       'toolchange_temp': print_temp,
-                      'temper_change_gcode': temper_change_gcode,
+                      'output_gcode': temper_change_gcode,
+                      'line_number' : line_number
                       }
     # toolchange number to toolchange pos index
     d.temper_positions.append(position)  # to speed up render process
     d.temper_index[position] = temper_details
+    d.temper_lines.append(line_number)
+
+
+def build_gcode_header(d):
+    # assemble statistics for gcode header
+    ts = time.ctime()
+    bod = []
+    bot = []
+    ins = []
+    for tool in d.configured_tools:
+        if d.tool_settings[tool]["beep_on_dip"] > 0:
+            bod.append(tool)
+        if d.tool_settings[tool]["beep_on_temp"] > 0:
+            bot.append(tool)
+        length = d.tool_settings[tool]["insertion_distance"]
+        ins.append(length)
+
+    if len(bod) == 0:
+        bod = "None"
+    if len(bot) == 0:
+        bot = "None"
+
+    header = "; SKINNYDIP THREAD REDUCTION v" + VERSION + "\n"
+    header += "; https://github.com/domesticatedviking/skinnydip\n"
+    header += "; Postprocessing completed on " + str(ts)+"\n"
+    sorted_tools = sorted(d.configured_tools)
+    header += ";         Configured extruders: " + str(sorted_tools) + "\n"
+    header += ";            Insertion lengths: " + str(ins) + "\n"
+    header += ";       Total # of toolchanges: " + str(len(d.tc_dict.keys())) + "\n"
+    header += ";                   Dips added: " + str(d.dips_inserted) + "\n"
+    header += ";       Toolchange_temps added: " + str(d.temp_drops_inserted) + "\n"
+    header += ";      Auto insertion distance: " + str(d.auto_insertion_distance) + "\n"
+
+    header += ";   Tools beeping on skinnydip: " + str(bod) + "\n"
+    header += "; Tools beeping on temp change: " + str(bod) + "\n"
+    lprint(header, False)
+    return header
+
+
+def prepare_insertions(d):
+    """
+    Speed up output by creating a list of insertions that maps to the line numbers
+    in the output file
+
+    :param d:
+    :return:
+    """
+
+    # merge and sort temperature and dip lists
+    d.dips_inserted=len(d.dip_lines)
+    d.temp_drops_inserted = len(d.temper_lines)
+    all_insertion_lines = sorted(list(set(d.temper_lines + d.dip_lines)))
+
+    # combine the dictionaries of insertion points for simpler code below.
+    blended_dict = merge_two_dicts(d.temper_index, d.dip_index)
+
+
+    d.final_insertion_list.append(None) #shifts location of output down by one line
+
+    for line_number in range(0, d.linecount):
+        if line_number in all_insertion_lines:
+            charpos = d.linebreak_list[line_number]
+            output_gcode = blended_dict[charpos]["output_gcode"]
+            d.final_insertion_list.append(output_gcode.strip())
+        else:
+            d.final_insertion_list.append(None)
+    #lprint ("final insertion list")
+    #lprint(str(d.final_insertion_list))
+
+
+
+
+
 
 
 
@@ -567,28 +694,30 @@ def add_temp_restore(d,position):
 def add_temp_pause(d, position):
     tool_number = get_tool_from_filepos(d, position)
     toolchange_temp = d.tool_settings[tool_number]['toolchange_temp']
-
+    line_number = d.line_lookup[position]
     tempbeep = ["",""]
     if d.tool_settings[tool_number]["beep_on_temp"] > 0:
         tempbeep = TEMP_BEEP
 
-    temper_change_gcode = ""
+    temper_change_gcode = "; *****************************************\n"
     temper_change_gcode += tempbeep[0]
     temper_change_gcode += "M109 R" + str(
-        toolchange_temp) + " ;***SKINNYDIP Pausing for " + \
+        toolchange_temp) + " ;***SKINNYDIP Waiting for " + \
                           tool_number + " toolchange temp: "+str(toolchange_temp)+"\n" + tempbeep[1]
+    temper_change_gcode += "; *****************************************\n"
 
     temper_details = {'toolchange_number': 0,
                       'tool_pos': position,
                       'tool_number': tool_number,
                       'toolchange_temp': toolchange_temp,
-                      'temper_change_gcode': temper_change_gcode,
+                      'output_gcode': temper_change_gcode,
+                      'line_number': line_number
                       }
 
     # toolchange number to toolchange pos index
     d.temper_positions.append(position)  # to speed up render process
     d.temper_index[position] = temper_details
-
+    d.temper_lines.append(line_number)
 
 def index_temperature_change_positions(d):
     """
@@ -600,11 +729,10 @@ def index_temperature_change_positions(d):
 
     # scan for temperature change patterns
     matches = re.finditer(TOOLCHANGE_TEMP_REGEX, d.gcode_str)
-
     for matchNum, match in enumerate(matches, start=1):
-
         if match is not None:
             changepos = int(match.start('temp_start'))
+            line_number = d.line_lookup[changepos]
             tool_number = get_tool_from_filepos(d, changepos)
 
             toolchange_temp = d.tool_settings[tool_number]['toolchange_temp']
@@ -616,19 +744,20 @@ def index_temperature_change_positions(d):
             temper_change_gcode = ""
             temper_change_gcode += tempbeep[0]
             temper_change_gcode += "M104 S" + str(toolchange_temp) + \
-                               " ;***SKINNYDIP beginning " + str(tool_number) + " temperature change "+str(toolchange_temp)+"***\n"
+                               " ;***SKINNYDIP initiating " + str(tool_number) + " toolchange temperature.  Target: "+str(toolchange_temp)+"***\n"
 
             temper_details = {'toolchange_number': 0,
                           'tool_pos': changepos,
                           'tool_number': tool_number,
                           'toolchange_temp': toolchange_temp,
-                          'temper_change_gcode': temper_change_gcode,
+                          'output_gcode': temper_change_gcode,
+                           'line_number': line_number,
                           }
-
-            # toolchange number to toolchange pos index
             d.temper_positions.append(changepos)  # to speed up render process
             d.temper_positions=sorted(d.temper_positions) #required or some will be lost.
             d.temper_index[changepos] = temper_details
+            d.temper_lines.append(line_number)
+
     temperlen = str(len(d.temper_index.keys()))
     lprint("  Temperature drop index has " + temperlen + " elements")
     lprint("\n" + pprint.pformat(d.temper_index) + "\n", False)
@@ -664,11 +793,14 @@ def index_toolchanges(d):
         for matchNum, match in enumerate(matches, start=0):
             if match is not (None):
                 new_tool_pos = (match.start('tool'))  # add 1 because of initial newline
+                line_number = d.line_lookup[new_tool_pos]
                 new_tool = str(match.group('tool')).strip()
                 d.tc_dict[new_tool_pos] = {'new_tool': new_tool,
-                                         'previous_tool': prev_tool}
+                                         'previous_tool': prev_tool,
+                                           'line_number': line_number}
                 prev_tool = new_tool
                 d.tc_list.append(new_tool_pos)
+                d.tc_lines.append(line_number)
                 d.toolnumber_sequence.append(new_tool)
             else:
                 lprint("No toolchanges found!")
@@ -730,6 +862,28 @@ def get_tool_from_filepos(d, filepos):
         nearest_toolchange= d.tc_list[nearest_index-1]
     return d.tc_dict[nearest_toolchange]['new_tool']
 
+def build_output_lines(d):
+    #d.final_insertion_list
+    gcode_header = build_gcode_header(d).splitlines()
+    for line in gcode_header:
+        d.output_lines.append(line+"\n")
+
+    for linenum in xrange(d.linecount):
+        orgline = d.gcode_lines[linenum]
+        #print "linenum =" + str(linenum)
+        #print "original line =" + str(orgline)
+        insline = d.final_insertion_list[linenum]
+        #print "inserted line=" +str(insline)
+
+
+        if insline is not None:
+            for subline in insline.splitlines():
+                d.output_lines.append(subline+"\n")
+        d.output_lines.append(orgline)
+    lprint(d.output_lines, False)
+
+
+
 
 def build_output(d):
     d.dips_inserted = 0
@@ -742,6 +896,15 @@ def build_output(d):
     current_dip_insertion = 0
     current_temp_insertion = 0
     i = 0
+    d.build_start_time = datetime.now()
+    dippos_len=len(d.dip_positions)
+    temperpos_len=len(d.temper_positions)
+    progress = 0
+    progress_increment = len_chars/100
+    updater = 0
+    oldprogressbars = 0
+
+
 
 
     while (i < len_chars):
@@ -749,10 +912,13 @@ def build_output(d):
         dipmatch = False
 
         # check if current pos in file is indexed as an insertion point.
-        if current_dip_insertion < len(d.dip_positions):
+        if current_dip_insertion < dippos_len:
             dipspot = (d.dip_positions[current_dip_insertion])
             if i == dipspot:
                 dipmatch = True
+        else:
+            dipmatch = False
+
 
         if dipmatch:
             # get the stored toolchange position from the dip index
@@ -779,9 +945,12 @@ def build_output(d):
                 current_dip_insertion += 1
                 d.dips_ignored += 1
 
+
         tempermatch = False
-        if current_temp_insertion < len(d.temper_positions):
+        if current_temp_insertion < temperpos_len:
             tempermatch = (i == d.temper_positions[current_temp_insertion])
+        else:
+            tempermatch = False
 
         if tempermatch:
 
@@ -805,6 +974,14 @@ def build_output(d):
         if not (dipmatch) and not (tempermatch):
             d.out += str(d.gcode_str[i])
             i += 1
+
+        if updater == progress_increment:
+            print str(int((float(i)/float(len_chars))*100))
+            updater = 0
+        updater += 1
+        #if progressbars != oldprogressbars:
+        #    print str(progressbars)
+        #    oldprogressbars = progressbars
 
     # assemble statistics for gcode header
     ts = time.gmtime()
@@ -928,45 +1105,64 @@ def auto_calculate_insertion_length(d):
     lprint ("Based on the data in this gcode file, your suggested insertion_length is %.1f" % insertion_distance)
     return insertion_distance
 
-
+def index_linebreaks(d):
+    d.linebreak_list = []
+    d.line_lookup = {}
+    linebreaks = re.finditer(LINEBREAKS_REGEX, d.gcode_str, re.MULTILINE)
+    d.linecount = 0
+    for linebreakNum, linebreak in enumerate(linebreaks, start=0):
+        pos = linebreak.start("linebreak")
+        d.linebreak_list.append(pos+1) #we want to target the beginnings of lines
+        d.line_lookup[pos+1] = linebreakNum
+        d.linecount += 1
+    print "  lines in file: " + str(d.linecount)
+    #lprint(str(len(d.linebreak_list))+" linebreaks were found:")
+    #lprint(str(d.linebreak_list))
+    #lprint(str(len(d.linebreak_list)) + " elements in line lookup dict:")
+    #lprint(str(d.line_lookup))
 
 
 def main(target_file=None):
     lprint("Skinnydip MMU2 String Eliminator v" + VERSION)
     d = SetupData(target_file)
-    try:
-        d.open_target_file()
-        d.check_target_file()
-        d.init_log_file("skinnydip.log")
-        lprint("Looking up extruder settings")
-        get_extruder_settings(d)
-        auto_calculate_insertion_length(d)
-        lprint("Indexing toolchanges...")
-        index_toolchanges(d)
-        lprint("Scanning gcode for configuration parameters...")
-        get_settings(d)
-        lprint("Validating User Settings...")
-        clean_settings(d)
-        lprint("Searching for skinnydip, wait for temperature, and temperature restore gcode injection locations...")
-        index_dip_insertion_points(d)
-        lprint("Searching for initial temperature change gcode injection locations...")
-        index_temperature_change_positions(d)
-
-        lprint("Building post processed file...")
-        build_output(d)
-        d.close_target_file()
-        d.write_output_file()
-        d.write_log_file()
-        lprint("Post processing complete.  Exiting...")
+    #try:
+    d.open_target_file()
+    d.check_target_file()
+    d.init_log_file("skinnydip.log")
+    lprint("Looking up extruder settings")
+    get_extruder_settings(d)
+    auto_calculate_insertion_length(d)
+    lprint("Indexing linebreaks")
+    index_linebreaks(d)
+    lprint("Indexing toolchanges...")
+    index_toolchanges(d)
+    lprint("Scanning gcode for configuration parameters...")
+    get_settings(d)
+    lprint("Validating User Settings...")
+    clean_settings(d)
+    lprint("Searching for skinnydip, wait for temperature, and temperature restore gcode injection locations...")
+    index_dip_insertion_points(d)
+    lprint("Searching for initial temperature change gcode injection locations...")
+    index_temperature_change_positions(d)
+    lprint("Compiling final insertion list...")
+    prepare_insertions(d)
+    d.close_target_file()
+    lprint("Preparing to build output file")
+    d.open_target_file_lines()
+    build_output_lines(d)
+    d.write_output_file_lines()
+    d.write_log_file()
+    lprint("Post processing complete.  Exiting...")
+    exit(0)
+    """
     except Exception, e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-        lprint(str(e) +"\n"+str(exc_type)+"\n"+str(fname)+"\n"+str(exc_tb.tb_lineno)+"\n", error=True)
         d.write_log_file()
         d.close_target_file()
         exit(-1)
         raise
-
+    """
 
 if __name__ == "__main__":
     target_file = None
