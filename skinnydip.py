@@ -34,7 +34,7 @@ import time
 import shutil
 
 #  CONSTANTS ************************************************
-VERSION = "0.9.1 alpha"
+VERSION = "0.9.3 alpha"
 TEST_FILE = ""
 RESOURCE_PATH = "/home/erik/PycharmProjects/skinnydip/testobjects/"
 PROJECT_PATH = "/home/erik/PycharmProjects/skinnydip/"
@@ -46,7 +46,7 @@ NULL_SETTINGS_DICT = {
     "insertion_distance": "auto",
     "material_type": "N/A",
     "material_name": "not configured",
-    "toolchange_temp": -1,
+    "toolchange_temp": "OFF",
     "print_temp": -1,
     "insertion_speed": 0,
     "extraction_speed": 0,
@@ -58,13 +58,13 @@ NULL_SETTINGS_DICT = {
 
 # [lower limit, upper limit, [accepted values], default if no value]
 SAFE_RANGE = {
-    "insertion_speed": [300, 10000, [], None],
-    "extraction_speed": [300, 10000, [], None],
+    "insertion_speed": [300, 10000, [], 2000],
+    "extraction_speed": [300, 10000, [], 4000],
     "insertion_pause": [0, 20000, [None, ], 0],
     "insertion_distance": [0, 60, ["AUTO", None], "AUTO"],
     "removal_pause": [0, 20000, [None, ], 0],
     "print_temp": [150, 295, [], "error"],
-    "toolchange_temp": [150, 295, [0, -1, None], None],
+    "toolchange_temp": [150, 295, [0, -1, "0", "-1", "OFF"], "OFF"],
     "beep_on_dip": [0, 1, ["OFF", "ON"], "OFF"],
     "beep_on_temp": [0, 1, ["OFF", "ON"], "OFF"],
 }
@@ -450,6 +450,8 @@ def generate_temp_restore(d, position):
     """
     tool_number = get_tool_from_filepos(d, position)
     print_temp = d.tool_settings[tool_number]['print_temp']
+    if str(print_temp).upper() in ["ERROR", "OFF", "0", "NONE", "-1"]:
+        lprint("FATAL ERROR:  Restore temperature out of range!", error=True)
     lprint(str(tool_number) + " temperature " + str(print_temp) + "    restored at pos: " + str(position), False)
     line_number = d.line_lookup[position]
     tempbeep = ["", ""]
@@ -532,11 +534,13 @@ def generate_gcode_header(d):
     bod = []
     bot = []
     ins = []
+    tct = []
     for tool in d.configured_tools:
         if str(d.tool_settings[tool]["beep_on_dip"]).upper() in ["ON", "1"]:
             bod.append(tool)
         if str(d.tool_settings[tool]["beep_on_temp"]).upper() in ["ON", "1"]:
             bot.append(tool)
+        tct.append(d.tool_settings[tool]["toolchange_temp"])
         length = d.tool_settings[tool]["insertion_distance"]
         ins.append(length)
 
@@ -552,12 +556,12 @@ def generate_gcode_header(d):
     header += "; Skinnydip settings.  To change parameters you must reslice.\n\n"
     sorted_tools = sorted(d.configured_tools)
     header += ";         Configured extruders: " + str(sorted_tools) + "\n"
+    header += ";             Toolchange temps: " + str(tct) + "\n"
     header += ";            Insertion lengths: " + str(ins) + "\n"
+    header += ";      Auto insertion distance: " + str(d.auto_insertion_distance) + "\n"
     header += ";       Total # of toolchanges: " + str(len(d.tc_dict.keys())) + "\n"
     header += ";                   Dips added: " + str(d.dips_inserted) + "\n"
-    header += ";       Toolchange_temps added: " + str(d.temp_drops_inserted) + "\n"
-    header += ";      Auto insertion distance: " + str(d.auto_insertion_distance) + "\n"
-
+    header += ";       Toolchange temps added: " + str(d.temp_drops_inserted) + "\n"
     header += ";   Tools beeping on skinnydip: " + str(bod) + "\n"
     header += "; Tools beeping on temp change: " + str(bot) + "\n\n"
     if len(d.notices) > 0:
@@ -615,12 +619,23 @@ def prepare_insertions(d):
     :return: None
     """
 
+
     # merge and sort temperature and dip lists
     d.dips_inserted = len(d.dip_lines)
     d.temp_drops_inserted = len(d.temper_lines)
-    all_insertion_lines = sorted(list(set(d.temper_lines + d.dip_lines)))
-    # combine the dictionaries of insertion points
-    blended_dict = merge_two_dicts(d.temper_index, d.dip_index)
+    if d.temp_drops_inserted == 0:
+        all_insertion_lines = d.dip_lines
+        blended_dict = d.dip_index
+    elif d.dips_inserted == 0:
+        all_insertion_lines = d.temper_lines
+        blended_dict = d.temper_index
+    elif d.dips_inserted == 0 and d.temp_drops_inserted == 0:
+        lprint ("ERROR: No insertions to process!", error= True)
+    else:
+        all_insertion_lines = sorted(list(set(d.temper_lines + d.dip_lines)))
+        # combine the dictionaries of insertion points
+        blended_dict = merge_two_dicts(d.temper_index, d.dip_index)
+
     # shift location of output down by one line to ensure it maps to the right line of output code
     d.final_insertion_list.append(None)  # important!
     for line_number in range(0, d.linecount):
@@ -885,26 +900,31 @@ def get_insertion_points(d):
      existence of keys)
     '''
 
-    d.dip_index = {}
-    d.dip_positions = []
+
     matches = re.finditer(INSERTIONS_REGEX, d.gcode_str, re.MULTILINE)
     for matchNum, match in enumerate(matches, start=1):
         dip_pos = match.start("dip_pos")
         line_number = d.line_lookup[dip_pos]
         new_tool = match.group("new_tool")
         new_tool_pos = match.start("new_tool")
-
+        previous_tool = d.tc_dict[new_tool_pos]["previous_tool"]
         temp_pause_pos = match.start("temp_pause")
-        if temp_pause_pos is not None:
-            generate_wait_for_temp(d, temp_pause_pos)
-
         filament_temp = match.group("filament_temp")
-        if filament_temp is None:
+        toolchange_temp = d.tool_settings[previous_tool]["toolchange_temp"]
+
+        apply_temp_change = True
+        if previous_tool not in d.configured_tools or \
+                str(toolchange_temp).upper() in ["OFF", "0", "-1"]:
+            apply_temp_change = False
+        if apply_temp_change:
+            if temp_pause_pos is not None:
+                generate_wait_for_temp(d, temp_pause_pos)
+        if filament_temp is None and apply_temp_change:
             temp_restore_pos = match.start("temp_restore")
             if temp_restore_pos is not None:
                 generate_temp_restore(d, temp_restore_pos)
         try:
-            previous_tool = d.tc_dict[new_tool_pos]["previous_tool"]
+
             bundle = {"previous_tool": previous_tool,
                       "new_tool": new_tool,
                       "new_tool_pos": new_tool_pos,
@@ -916,6 +936,8 @@ def get_insertion_points(d):
             d.dip_lines.append(line_number)
         except Exception, e:
             lprint(str(e), error=True)
+
+
     lprint("dip postitions:\n" + str(d.dip_positions), False)
     lprint("dip_index:\n" + pprint.pformat(d.dip_index), False)
     spos = d.dip_positions
@@ -943,25 +965,26 @@ def get_temperature_change_positions(d):
             line_number = d.line_lookup[changepos]
             tool_number = get_tool_from_filepos(d, changepos)
             toolchange_temp = d.tool_settings[tool_number]['toolchange_temp']
-            tempbeep = ["", ""]
-            if str(d.tool_settings[tool_number]["beep_on_temp"]).upper() in ["ON", "1"]:
-                tempbeep = TEMP_BEEP
-            temper_change_gcode = ""
-            temper_change_gcode += tempbeep[0]
-            temper_change_gcode += "M104 S" + str(toolchange_temp) + \
-                                   " ;***SKINNYDIP initiating " + str(
-                tool_number) + " toolchange temperature.  Target: " + str(toolchange_temp) + "***\n"
-            temper_details = {'toolchange_number': 0,
-                              'tool_pos': changepos,
-                              'tool_number': tool_number,
-                              'toolchange_temp': toolchange_temp,
-                              'output_gcode': temper_change_gcode,
-                              'line_number': line_number,
-                              }
-            d.temper_positions.append(changepos)  # to speed up render process
-            d.temper_positions = sorted(d.temper_positions)  # required or some will be lost.
-            d.temper_index[changepos] = temper_details
-            d.temper_lines.append(line_number)
+            if str(toolchange_temp).upper() not in ["OFF", "0", "-1"] and tool_number in d.configured_tools:
+                tempbeep = ["", ""]
+                if str(d.tool_settings[tool_number]["beep_on_temp"]).upper() in ["ON", "1"]:
+                    tempbeep = TEMP_BEEP
+                temper_change_gcode = ""
+                temper_change_gcode += tempbeep[0]
+                temper_change_gcode += "M104 S" + str(toolchange_temp) + \
+                                       " ;***SKINNYDIP initiating " + str(
+                    tool_number) + " toolchange temperature.  Target: " + str(toolchange_temp) + "***\n"
+                temper_details = {'toolchange_number': 0,
+                                  'tool_pos': changepos,
+                                  'tool_number': tool_number,
+                                  'toolchange_temp': toolchange_temp,
+                                  'output_gcode': temper_change_gcode,
+                                  'line_number': line_number,
+                                  }
+                d.temper_positions.append(changepos)  # to speed up render process
+                d.temper_positions = sorted(d.temper_positions)  # required or some will be lost.
+                d.temper_index[changepos] = temper_details
+                d.temper_lines.append(line_number)
     temperlen = str(len(d.temper_index.keys()))
     lprint("  Temperature drop index has " + temperlen + " elements")
     lprint("\n" + pprint.pformat(d.temper_index) + "\n", False)
