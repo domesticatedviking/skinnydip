@@ -25,16 +25,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 #  MODULES  ************************************************
-from argparse import ArgumentParser
+import argparse
+import getopt
 from bisect import bisect_left
 import re
 import pprint
 import os
 import time
 import shutil
+import sys
+
 
 #  CONSTANTS ************************************************
-VERSION = "0.9.3 alpha"
+VERSION = "1.0.0 beta"
 TEST_FILE = ""
 RESOURCE_PATH = "/home/erik/PycharmProjects/skinnydip/testobjects/"
 PROJECT_PATH = "/home/erik/PycharmProjects/skinnydip/"
@@ -107,13 +110,13 @@ LINEBREAKS_REGEX = r"(?P<linebreak>\n)"
 logtext = ""
 
 
-# CLASS DEFINITIONS
 # CLASS DEFINITIONS **********************************************************
 class CustomError(Exception):
     """
     Generic custom error handler
     """
     pass
+
 
 
 class FileInfo():
@@ -135,29 +138,47 @@ class FileInfo():
         self.outfile = None
         self.log_file_name = ""
 
+        self.skinnydip_script_absolute = os.path.abspath(__file__)
+        self.skinnydip_script_dir = (os.path.dirname(self.skinnydip_script_absolute)).rstrip(os.sep)
+        self.log_file_name = str(os.path.join(self.skinnydip_script_dir, "skinnydip.log"))
+        print self.log_file_name
+
         if self.target_file is not None:
             self.file_to_process = target_file
             self.keep_original = False
         else:
-            self.parser = ArgumentParser()
-            self.parser.add_argument(dest="myFile", help="open a file")
+            self.parser = argparse.ArgumentParser()
+            self.parser.add_argument("myFile")
             self.parser.add_argument("--k", "--keep", action='store_true',
                                      help="keep copy of original file")
             self.args = self.parser.parse_args()
-            self.file_to_process = self.args.myFile
+
             self.keep_original = self.args.k
             self.myFile = self.args.myFile
             self.file_to_process = self.args.myFile
 
+            self.inputfile_realpath = os.path.realpath(self.myFile)
+            self.file_to_process = self.inputfile_realpath
+            self.inputfile_dir = os.path.dirname(self.inputfile_realpath)
+            self.inputfile_bn = os.path.basename(self.myFile)
+
         if self.file_to_process is not None:
-            self.inputfilename = os.path.splitext(self.file_to_process)[0]
-            self.inputextension = os.path.splitext(self.file_to_process)[1]
+            self.inputfilename = os.path.splitext(self.inputfile_bn)[0]
+            self.inputextension = os.path.splitext(self.inputfile_bn)[1]
             self.inputfull = self.inputfilename + self.inputextension
+            self.inputfullpath = os.path.join(self.inputfile_dir, self.inputfull)
+
+
             self.outputfilename = self.inputfilename + "_skinnydip" + self.inputextension
-            self.bakfilename = self.inputfilename + "_original" + self.inputextension
+            self.outputfilenamefull = os.path.join(self.inputfile_dir, self.outputfilename)
+
+            self.bakfilename = (self.inputfilename) + "_original" + (self.inputextension)
+            self.bakfilefullpath = os.path.join(self.inputfile_dir, self.bakfilename)
+
             lprint('File received for processing was {}'.format(self.file_to_process))
         else:
             lprint('No file received as an argument')
+
 
     def open_file_lines(self):
         self.f = open(self.file_to_process)
@@ -178,32 +199,34 @@ class FileInfo():
         self.lines = []
 
     def write_output_file(self, contents):
-        lprint("writing output to temporary file: " + self.outputfilename)
-        self.outfile = open(self.outputfilename, 'w')
+        lprint("writing output to temporary file: " + self.outputfilenamefull)
+        self.outfile = open(self.outputfilenamefull, 'w')
         self.outfile.write(contents)
         self.outfile.close()
+        self.close_file()
         if self.keep_original:
-            lprint("renaming original file as " + self.bakfilename)
-            os.rename(self.inputfull, self.bakfilename)
+            lprint("renaming original file as " + self.bakfilefullpath)
+            os.rename(self.inputfullpath, self.bakfilefullpath)
         else:
             lprint("deleting original file: " + self.inputfull)
-            os.remove(self.inputfull)
-        lprint("moving post processed output to " + self.inputfull)
-        os.rename(self.outputfilename, self.inputfull)
+            os.remove(self.inputfullpath)
+        lprint("moving post processed output to " + self.inputfullpath)
+        os.rename(self.outputfilenamefull, self.inputfullpath)
 
     def write_output_file_lines(self, contents):
-        lprint("writing output to temporary file: " + self.outputfilename)
-        self.outfile = open(self.outputfilename, 'w')
+        lprint("writing output to temporary file: " + self.outputfilenamefull)
+        self.outfile = open(self.outputfilenamefull, 'w')
         self.outfile.writelines(contents)
         self.outfile.close()
+        self.close_file_lines()
         if self.keep_original:
-            lprint("renaming original file as " + self.bakfilename)
-            os.rename(self.inputfull, self.bakfilename)
+            lprint("renaming original file as " + self.bakfilefullpath)
+            os.rename(self.inputfullpath, self.bakfilefullpath)
         else:
-            lprint("deleting original file: " + self.inputfull)
-            os.remove(self.inputfull)
-        lprint("moving post processed output to " + self.inputfull)
-        os.rename(self.outputfilename, self.inputfull)
+            lprint("deleting original file: " + self.inputfullpath)
+            os.remove(self.inputfullpath)
+        lprint("moving post processed output to " + self.inputfullpath)
+        os.rename(self.outputfilenamefull, self.inputfullpath)
 
 
 class SetupData():
@@ -212,6 +235,7 @@ class SetupData():
     """
 
     def __init__(self, target_file):
+        self.scriptpath =  os.path.abspath(__file__)
         self.configured_tools = []
         self.auto_insertion_distance = None
         self.log_file_name = None
@@ -549,9 +573,12 @@ def generate_gcode_header(d):
     if len(bot) == 0:
         bot = "None"
 
+
+
     header = "; SKINNYDIP THREAD REDUCTION v" + VERSION + "\n"
     header += "; https://github.com/domesticatedviking/skinnydip\n"
     header += "; Postprocessing completed on " + str(ts) + "\n"
+    header += ";               File Processed:" + str(d.fileinfo.inputfile_realpath) + "\n"
     header += "; Note that editing the values below will have no effect on your\n"
     header += "; Skinnydip settings.  To change parameters you must reslice.\n\n"
     sorted_tools = sorted(d.configured_tools)
