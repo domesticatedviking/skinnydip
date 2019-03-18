@@ -37,12 +37,15 @@ import sys
 
 
 #  CONSTANTS ************************************************
-VERSION = "1.0.1 beta"
+VERSION = "1.0.2 beta"
 TEST_FILE = ""
 RESOURCE_PATH = "/home/erik/PycharmProjects/skinnydip/testobjects/"
 PROJECT_PATH = "/home/erik/PycharmProjects/skinnydip/"
 
 TOOL_LIST = ["T0", "T1", "T2", "T3", "T4"]
+
+#distance in mm to fine tune automatic insertion distance
+AUTO_INSERTION_DISTANCE_TWEAK = -2
 
 # settings to initialize all tools
 NULL_SETTINGS_DICT = {
@@ -142,19 +145,18 @@ class FileInfo():
         self.skinnydip_script_dir = (os.path.dirname(self.skinnydip_script_absolute)).rstrip(os.sep)
         self.log_file_name = str(os.path.join(self.skinnydip_script_dir, "skinnydip.log"))
 
-
         if self.target_file is not None:
             self.file_to_process = target_file
             self.keep_original = False
         else:
             self.parser = argparse.ArgumentParser()
-            self.parser.add_argument("myFile")
+            self.parser.add_argument("myFile", nargs="+")  # "+" is for filenames with spaces
             self.parser.add_argument("--k", "--keep", action='store_true',
                                      help="keep copy of original file")
             self.args = self.parser.parse_args()
 
             self.keep_original = self.args.k
-            self.myFile = self.args.myFile
+            self.myFile = ' '.join(self.args.myFile)  # handle filenames with spaces
             self.file_to_process = self.args.myFile
 
             self.inputfile_realpath = os.path.realpath(self.myFile)
@@ -830,9 +832,9 @@ def auto_calculate_insertion_length(d):
     tube_pos = float(d.gcode_vars['cooling_tube_retraction'])
     tube_length = float(d.gcode_vars['cooling_tube_length'])
     insertion_distance = tube_pos + (0.5 * tube_length) - 1.5
-    d.auto_insertion_distance = insertion_distance
-    lprint("Based on the data in this gcode file, your suggested insertion_length is %.1f" % insertion_distance)
-    return insertion_distance
+    d.auto_insertion_distance = insertion_distance + AUTO_INSERTION_DISTANCE_TWEAK
+    lprint("Based on the data in this gcode file, your suggested insertion_length is %.1f" % d.auto_insertion_distance)
+    return d.auto_insertion_distance
 
 
 # SEARCH FUNCTIONS ***********************************************************
