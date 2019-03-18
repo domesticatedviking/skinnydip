@@ -37,7 +37,7 @@ import sys
 
 
 #  CONSTANTS ************************************************
-VERSION = "1.0.0 beta"
+VERSION = "1.0.1 beta"
 TEST_FILE = ""
 RESOURCE_PATH = "/home/erik/PycharmProjects/skinnydip/testobjects/"
 PROJECT_PATH = "/home/erik/PycharmProjects/skinnydip/"
@@ -94,7 +94,7 @@ WAIT_FOR_TEMP_REGEX = r"(?P<wait_for_temp>^G1 E-\d\d.*\n)(^G1 E-.*$\n)" + \
 TOOLCHANGE_TEMP_REGEX = r"M220 B.*\nM220 S(?P<speed_override>\d.*)\n" + \
                         r"(M.*\n)?(?P<temp_start>; CP TOOLCHANGE UNLOAD)"
 SETTINGS_REGEX = r"(?P<previous_tool>^T[01234].*$)(?P<otherstuff>(.*\n)" + \
-                 r"{40,100}); SKINNYDIP CONFIGURATION START.*\n" + \
+                 r"{10,250}); SKINNYDIP CONFIGURATION START.*\n" + \
                  r"(?P<parameters>(; .*\n){1,11});.?SKINNYDIP " + \
                  r"CONFIGURATION END"
 COOLING_MOVE_REGEX = r"(?P<dip_pos>G1 E-).*\n(.*\n){1,5}(?P<new_tool>T\d)"
@@ -141,7 +141,7 @@ class FileInfo():
         self.skinnydip_script_absolute = os.path.abspath(__file__)
         self.skinnydip_script_dir = (os.path.dirname(self.skinnydip_script_absolute)).rstrip(os.sep)
         self.log_file_name = str(os.path.join(self.skinnydip_script_dir, "skinnydip.log"))
-        print self.log_file_name
+
 
         if self.target_file is not None:
             self.file_to_process = target_file
@@ -174,6 +174,7 @@ class FileInfo():
 
             self.bakfilename = (self.inputfilename) + "_original" + (self.inputextension)
             self.bakfilefullpath = os.path.join(self.inputfile_dir, self.bakfilename)
+
 
             lprint('File received for processing was {}'.format(self.file_to_process))
         else:
@@ -260,6 +261,7 @@ class SetupData():
         self.fileinfo = FileInfo(target_file)
         self.output_lines = []
         self.notices = []
+        self.log_file_name = self.fileinfo.log_file_name
 
     def sort_indexes(self):
         # self.temper_index = sorted(self.temper_index)
@@ -309,7 +311,8 @@ class SetupData():
         self.log_file_name = filename
 
     def write_log_file(self):
-        logfile = open("skinnydip.log", "w")
+        lprint("Writing log file at " + str(self.fileinfo.log_file_name) + "\n")
+        logfile = open(self.fileinfo.log_file_name, "w")
         logfile.write(logtext)
         logfile.close()
 
