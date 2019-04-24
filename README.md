@@ -29,9 +29,16 @@ In Slic3rPE > Print Settings > Output Options > Post Processing Scripts, use the
 
 ```C:\python27\python.exe C:\my\folder\skinnydip.py```
 
+#### New:  Batch file for Windows users
+Some Windows users were reporting that parameters weren't being picked up correctly when filenames contained spaces.   This was determined to be due to [an issue with Slic3r PE](https://github.com/slic3r/Slic3r/issues/4000).  The included batch file (skinnydip.bat) should be saved in the same directory as skinnydip.py.  It attempts to locate your python installation automatically.   To call skinnydip with the windows batch file, use the following syntax:
+
+```\path\to\skinnydip.bat```
+
+This batch file also includes a pause at the end so that you can see the output of the post-processor before windows closes the command line window.
 
 
-### Linux
+
+### Linux / Mac
 In Slic3r PE, provide the absolute path to the skinnydip.py script in Print Settings > Output Options > Post-processing scripts.   
 eg.  ```/home/username/some_folder/skinnydip.py```
 ##### Known issue with installation on Linux appimage builds
