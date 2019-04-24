@@ -31,6 +31,7 @@ In Slic3rPE > Print Settings > Output Options > Post Processing Scripts, use the
 
 #### New:  Batch file for Windows users (recommended)
 Some Windows users were reporting that parameters weren't being picked up correctly when filenames contained spaces.   This was determined to be due to [an issue with Slic3r PE](https://github.com/slic3r/Slic3r/issues/4000).  The included batch file (skinnydip.bat) should be saved in the same directory as skinnydip.py.  It attempts to locate your python installation automatically.   To call skinnydip with the windows batch file, in Slic3rPE > Print Settings > Output Options > Post Processing Scripts, use the following:
+
 ```\path\to\skinnydip.bat```
 
 This batch file also includes a pause at the end so that you can see the output of the post-processor before windows closes the command line window.  You will need to press any key for this window to close in order to resume using Slic3r.
