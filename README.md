@@ -9,6 +9,7 @@ Tested with the following versions of Slic3r PE:
 * 1.41.2+linux64
 * 1.42.0-alpha7+linux64
 * 1.42.0-alpha7+win64
+* 1.42.0-beta1+linux64
 
 While it is possible that it may work with other versions of Slic3r, please do not assume this to be the case, as any changes to the gcode structure expected by this script could lead to gcode that has unintended effects, some of which may be dangerous.   If you choose to use this, I salute you!
 
