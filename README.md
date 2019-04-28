@@ -46,6 +46,7 @@ eg.  ```/home/username/some_folder/skinnydip.py```
 At the time of this initial release some Linux appimage builds of Slic3r PE are misconfigured in a way that prevents running Python scripts directly.  Use ```/home/username/skinnydip_appimage_workaround.sh``` in the post processing script field instead.  This script should be located in the same folder as skinnydip.py
 ##### Permissions:
 If you have issues with skinnydip.py or the workaround script running, you may need to update their permissions to mark them as executable. This can be done through the right-click menu or through the command line, ie:
+
 ```chmod +x skinnydip.py```
 
 ## Usage:
