@@ -56,7 +56,7 @@ M900 K{if printer_notes=~/.*PRINTER_HAS_BOWDEN.*/}200{else}30{endif}; Filament g
 ; insertion_speed 2000 
 ; extraction_speed 4000
 ; insertion_pause 0 
-; insertion_distance 31 
+; insertion_distance 41 
 ; removal_pause 0
 ; toolchange_temp off
 ; beep_on_dip off
@@ -99,7 +99,7 @@ material_name     | User defined name for this filament                         
 insertion_speed   | Speed at which the filament enters the melt zone after cooling moves are finished. | 2000 (mm/min)
 extraction_speed  | Speed at which the filament leaves the melt zone.  Faster is generally better | 4000 (mm/min)           
 insertion_pause   | Time to pause in the melt zone before extracting the filament.| 0 (milliseconds) |
-insertion_distance| Distance in mm for filament to be inserted into the melt zone.  This setting is hardware and assembly specific, so it must be determined experimentally - start with a low value of ~30-31mm, then work your way up.  If blobs appear on the wipe tower or stringing starts getting worse rather than better, this value should be reduced.   | 31mm
+insertion_distance| Distance in mm for filament to be inserted into the melt zone.  This setting is hardware and assembly specific, so it must be determined experimentally.  For stock extruders, use 40-42mm. For bondtech BMG extruders, use 30-32mm.  If blobs appear on the wipe tower or stringing starts getting worse rather than better, this value should be reduced.   | n/a
 removal_pause     | Number of milliseconds to pause in the cooling zone prior to extracting filament from hotend.  This pause can be helpful to allow the filament to cool prior to being handled by the bondtech gears. |  0 (milliseconds)
 toolchange_temp   | Temperature to extract filament from the hotend.  Cooler temperatures are associated with better tips. | off
 beep_on_dip       | Play a tone through the printer's speaker to signal when a skinnydip move is taking place (for debug purposes) |off (off/on)  |
