@@ -97,7 +97,7 @@ WAIT_FOR_TEMP_REGEX = r"(?P<wait_for_temp>^G1 E-\d\d.*\n)(^G1 E-.*$\n)" + \
 TOOLCHANGE_TEMP_REGEX = r"M220 B.*\nM220 S(?P<speed_override>\d.*)\n" + \
                         r"(M.*\n)?(?P<temp_start>; CP TOOLCHANGE UNLOAD)"
 SETTINGS_REGEX = r"(?P<previous_tool>^T[01234].*$)(?P<otherstuff>(.*\n)" + \
-                 r"{10,250}); SKINNYDIP CONFIGURATION START.*\n" + \
+                 r"{10,250}?); SKINNYDIP CONFIGURATION START.*\n" + \
                  r"(?P<parameters>(; .*\n){1,11});.?SKINNYDIP " + \
                  r"CONFIGURATION END"
 COOLING_MOVE_REGEX = r"(?P<dip_pos>G1 E-).*\n(.*\n){1,5}(?P<new_tool>T\d)"
