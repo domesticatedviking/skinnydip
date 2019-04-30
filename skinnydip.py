@@ -37,7 +37,7 @@ import sys
 
 
 #  CONSTANTS ************************************************
-VERSION = "1.0.2 beta"
+VERSION = "1.0.3 beta"
 TEST_FILE = ""
 RESOURCE_PATH = "/home/erik/PycharmProjects/skinnydip/testobjects/"
 PROJECT_PATH = "/home/erik/PycharmProjects/skinnydip/"
