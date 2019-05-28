@@ -1,4 +1,4 @@
-# SKINNYDIP MMU2 string eliminator v1.0.2 beta
+# SKINNYDIP MMU2 string eliminator v1.0.3 beta
 a post processing script for Slic3r PE to remove fine threads from filament tips during MMU2 toolchanges.
 Written by Erik Bjorgan based on a core concept from David Shealey.
 With love to the Prusa Community Forum and its incredible admin team.
@@ -10,8 +10,9 @@ Tested with the following versions of Slic3r PE:
 * 1.42.0-alpha7+linux64
 * 1.42.0-alpha7+win64
 * 1.42.0-beta1+linux64
+* PrusaSlicer 2.0.0
 
-While it is possible that it may work with other versions of Slic3r, please do not assume this to be the case, as any changes to the gcode structure expected by this script could lead to gcode that has unintended effects, some of which may be dangerous.   If you choose to use this, I salute you!
+While it is possible that it may work with other versions of Slic3r / Prusaslicer, please do not assume this to be the case, as any changes to the gcode structure expected by this script could lead to gcode that has unintended effects, some of which could potentially be dangerous.
 
 ## Purpose:
 This script is used to eliminate the stubborn threads of filament that
@@ -95,6 +96,11 @@ A successfully processed gcode file will have a header similar to the one below 
 ; Tools beeping on temp change: None
 
 ```
+## Known issues:
+
+Skinnydip uses regular expressions to scan the gcode file for settings and places that it needs to insert commands.  It is very good at doing this when the input gcode has patterns that it expects to see, but it will also fail to insert commands if the gcode is not in the form expected.   You may find that there are some files that it fails to process properly, typically it will fail to apply a temperature change or add the skinnydip routine.   It would be GREATLY appreciated if you could attach the UNPROCESSED gcode files (sliced with the skinnydip settings included, but not processed by skinnydip.py) in your reports of these kinds of issues.   Thank you!!
+
+
 
 ## Explanation of configuration parameters:
 |Parameter          |Explanation                                              |Default Value |
