@@ -12,7 +12,7 @@ Tested with the following versions of Slic3r PE:
 * 1.42.0-beta1+linux64
 * PrusaSlicer 2.0.0
 
-While it is possible that it may work with other versions of Slic3r / Prusaslicer, please do not assume this to be the case, as any changes to the gcode structure expected by this script could lead to gcode that has unintended effects, some of which could potentially be dangerous.
+While it is possible that it may work with other versions of Slic3r / PrusaSlicer, please do not assume this to be the case, as any changes to the gcode structure expected by this script could lead to gcode that has unintended effects, some of which could potentially be dangerous.
 
 ## Purpose:
 This script is used to eliminate the stubborn threads of filament that
