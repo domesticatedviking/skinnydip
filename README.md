@@ -119,7 +119,7 @@ beep_on_temp      | Play a tone when a toolchange temperature setting has been a
 ## Goals:
 This method is highly effective for removing fine strings of filament.
 This script is intended as a proof of concept, with the hopes that this
-functionality would be added to a future revision of Slic3r PE.
+functionality would be added to a future revision of Slic3r PE / PrusaSlicer.
 
 
 
