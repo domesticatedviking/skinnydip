@@ -37,7 +37,7 @@ import sys
 
 
 #  CONSTANTS ************************************************
-VERSION = "1.0.4 beta"
+VERSION = "1.0.5 beta"
 TEST_FILE = ""
 RESOURCE_PATH = "/home/erik/PycharmProjects/skinnydip/testobjects/"
 PROJECT_PATH = "/home/erik/PycharmProjects/skinnydip/"
@@ -169,7 +169,7 @@ class FileInfo():
         else:
             self.parser = argparse.ArgumentParser()
             self.parser.add_argument("myFile", nargs="+")  # "+" is for filenames with spaces
-            self.parser.add_argument("-k", "--keep", action='store_true',
+            self.parser.add_argument("-k", "--keep", dest="k", action='store_true',
                                      help="keep copy of original file")
             self.args = self.parser.parse_args()
 
