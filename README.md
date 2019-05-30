@@ -78,22 +78,23 @@ If this number is too high, filament will be rammed out of the hotend onto the w
 A successfully processed gcode file will have a header similar to the one below added to the beginning of the file.  Check this by opening the gcode file with a text editor.    If this header is not present, this means that your file has not been processed by the skinnydip script.  This is usually due to a problem with the way you've instructed Slic3r to run the script, but can also happen if Python 2.7 is not available on your system.
 
 ```
-; SKINNYDIP THREAD REDUCTION v1.0 beta
+; SKINNYDIP THREAD REDUCTION v1.0.4 beta
 ; https://github.com/domesticatedviking/skinnydip
-; Postprocessing completed on Mon Mar 11 22:05:23 2019
-;               File Processed:/path/to/file.gcode
+; Postprocessing completed on Wed May 29 21:05:14 2019
+;               File Processed:/home/erik/PycharmProjects/skinnydip/01234.gcode
 ; Note that editing the values below will have no effect on your
 ; Skinnydip settings.  To change parameters you must reslice.
 
 ;         Configured extruders: ['T0', 'T1', 'T2', 'T3', 'T4']
 ;             Toolchange temps: [230, 231, 232, 233, 234]
-;            Insertion lengths: [50, 31, 31, 31, 31]
-;      Auto insertion distance: 33.5
+;          Insertion distances: [50, 31, 31, 31, 31]
+;      Auto insertion distance: 31.5
 ;       Total # of toolchanges: 83
-;                   Dips added: 80
-;       Toolchange temps added: 199
+;                   Dips added: 42
+;       Toolchange temps added: 161
 ;   Tools beeping on skinnydip: None
 ; Tools beeping on temp change: None
+
 
 ```
 ## Known issues:
