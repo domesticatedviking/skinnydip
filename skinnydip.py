@@ -37,10 +37,12 @@ import sys
 
 
 #  CONSTANTS ************************************************
-VERSION = "1.0.3 beta"
+VERSION = "1.0.4 beta"
 TEST_FILE = ""
 RESOURCE_PATH = "/home/erik/PycharmProjects/skinnydip/testobjects/"
 PROJECT_PATH = "/home/erik/PycharmProjects/skinnydip/"
+
+MIN_LEVEL_TO_LOG=0  #[0,1,2]
 
 TOOL_LIST = ["T0", "T1", "T2", "T3", "T4"]
 
@@ -85,28 +87,42 @@ UP_BEEP = "M300 S1912 P95  ;upbeep\nM300 S3830 P95  ;upbeep\n" + \
           "M300 S5742 P195 ;upbeep\n"
 
 # REGULAR EXPRESSIONS*********************************************************
-INSERTIONS_REGEX = r"(?P<temp_pause>G1 E-.*\n)((G1 E-|M73).*\n){2,7}" + \
+OLD_INSERTIONS_REGEX = r"(?P<temp_pause>G1 E-.*\n)((G1 E-|M73).*\n){2,7}" + \
                    r"(M104 S(?P<filament_temp>.*)\n)?(?P<temp_restore>" + \
                    r"G1 [^E].*\n)(?:.*\n){1,20}(?P<dip_pos>G1 E-).*\n" + \
                    r"(.*\n){1,5}(?P<new_tool>T\d)"
 
+INSERTIONS_REGEX = r"(?P<temp_pause>G1 E-.*\n)((G1 E-|M73).*\n){2,7}(M104 S(?P<filament_temp>.*)\n)?(?P<temp_restore>G1 [^E].*\n)(?:.*\n){1,20}(?P<dip_pos>G1.*[^E].*\n)(?:.*\n){1,5}G4 S.*\n(?P<new_tool>T\d)\nG4 S.*\n"
 TEMP_BEEP = ["M300 S3038 P155 ;temp_beep\n", "M300 S2550 P75 ;temp_beep\n"]
+
 CONFIGSTRING_REGEX = r"(SKINNYDIP CONFIGURATION START.?)(?P<configstring>.*)"
-WAIT_FOR_TEMP_REGEX = r"(?P<wait_for_temp>^G1 E-\d\d.*\n)(^G1 E-.*$\n)" + \
-                      r"{1,30}M104 S.*"
-TOOLCHANGE_TEMP_REGEX = r"M220 B.*\nM220 S(?P<speed_override>\d.*)\n" + \
+
+START_TEMPCHANGE_REGEX = r"M220 B.*\nM220 S(?P<speed_override>\d.*)\n" + \
                         r"(M.*\n)?(?P<temp_start>; CP TOOLCHANGE UNLOAD)"
+
+#OLD_WAIT_FOR_TEMP_REGEX = r"(?P<wait_for_temp>^G1 E-\d\d.*\n)(^G1 E-.*$\n)" + \
+#                      r"{1,30}M104 S.*"
+WAIT_FOR_TEMP_REGEX = r"(?P<wait_for_temp>^G1 E-\d\d.*\n)((^G1 E-.*$\n)|(M73.*\n)){1,10}"
+
+
 SETTINGS_REGEX = r"(?P<previous_tool>^T[01234].*$)(?P<otherstuff>(.*\n)" + \
                  r"{10,250}?); SKINNYDIP CONFIGURATION START.*\n" + \
                  r"(?P<parameters>(; .*\n){1,11});.?SKINNYDIP " + \
                  r"CONFIGURATION END"
-COOLING_MOVE_REGEX = r"(?P<dip_pos>G1 E-).*\n(.*\n){1,5}(?P<new_tool>T\d)"
+
+#OLD_COOLING_MOVE_REGEX = r"(?P<dip_pos>G1 E-).*\n(.*\n){1,5}(?P<new_tool>T\d)"
+COOLING_MOVE_REGEX = r"(?P<temp_pause>G1 E-.*\n)((G1 E-|M73).*?\n){2,7}"
+
 TOOLCHANGE_REGEX = r"(?P<tool>^T[01234]$)"
+
 FINAL_TOOLCHANGE_REGEX = r"G1 E.*\nG1.*\nG4 S0\n(?P<final>M2)20 R"  # ?M73
+
 TEMPERATURE_REGEX = regex = r"; temperature = (...),(...),(...),(...),(...)"
+
 FIRST_TOOL_SETTINGS_REGEX = r"\n(?P<first_tool>T[0-4])\nM.*\n;.*(SKINNYDIP " + \
                             r"CONFIGURATION START)\n(?P<config_string>" + \
                             r"(;.*\n)*)"
+
 LINEBREAKS_REGEX = r"(?P<linebreak>\n)"
 
 # GLOBAL VARS
@@ -148,10 +164,12 @@ class FileInfo():
         if self.target_file is not None:
             self.file_to_process = target_file
             self.keep_original = False
+            self.inputfile_dir = RESOURCE_PATH
+
         else:
             self.parser = argparse.ArgumentParser()
             self.parser.add_argument("myFile", nargs="+")  # "+" is for filenames with spaces
-            self.parser.add_argument("--k", "--keep", action='store_true',
+            self.parser.add_argument("-k", "--keep", action='store_true',
                                      help="keep copy of original file")
             self.args = self.parser.parse_args()
 
@@ -165,10 +183,19 @@ class FileInfo():
             self.inputfile_bn = os.path.basename(self.myFile)
 
         if self.file_to_process is not None:
-            self.inputfilename = os.path.splitext(self.inputfile_bn)[0]
-            self.inputextension = os.path.splitext(self.inputfile_bn)[1]
-            self.inputfull = self.inputfilename + self.inputextension
-            self.inputfullpath = os.path.join(self.inputfile_dir, self.inputfull)
+            if TEST_FILE == "":
+                self.inputfilename = os.path.splitext(self.inputfile_bn)[0]
+                self.inputextension = os.path.splitext(self.inputfile_bn)[1]
+                self.inputfull = self.inputfilename + self.inputextension
+                self.inputfullpath = os.path.join(self.inputfile_dir, self.inputfull)
+            else:
+                self.inputfilename = TEST_FILE
+                self.inputextension = os.path.splitext(TEST_FILE)[1]
+                self.inputfull = TEST_FILE
+                self.inputfullpath = target_file
+                self.inputfile_realpath = target_file
+
+
 
 
             self.outputfilename = self.inputfilename + "_skinnydip" + self.inputextension
@@ -381,7 +408,7 @@ def get_nearest(poslist, mypos):
         return before
 
 
-def lprint(message, display=True, error=False):
+def lprint(message, display=True, error=False, loglevel=1):
     """
     Very simple logger and error reporter.  Requires global string variable logtext.
     :param message: String indicating information or error
@@ -390,7 +417,8 @@ def lprint(message, display=True, error=False):
     :return:
     """
     global logtext
-    logtext += str((message)) + "\n"
+    if loglevel >= MIN_LEVEL_TO_LOG:
+        logtext += str((message)) + "\n"
     if error:
         raise CustomError(message)
     if display:
@@ -589,7 +617,7 @@ def generate_gcode_header(d):
     sorted_tools = sorted(d.configured_tools)
     header += ";         Configured extruders: " + str(sorted_tools) + "\n"
     header += ";             Toolchange temps: " + str(tct) + "\n"
-    header += ";            Insertion lengths: " + str(ins) + "\n"
+    header += ";          Insertion distances: " + str(ins) + "\n"
     header += ";      Auto insertion distance: " + str(d.auto_insertion_distance) + "\n"
     header += ";       Total # of toolchanges: " + str(len(d.tc_dict.keys())) + "\n"
     header += ";                   Dips added: " + str(d.dips_inserted) + "\n"
@@ -662,7 +690,7 @@ def prepare_insertions(d):
         all_insertion_lines = d.temper_lines
         blended_dict = d.temper_index
     elif d.dips_inserted == 0 and d.temp_drops_inserted == 0:
-        lprint ("ERROR: No insertions to process!", error= True)
+        lprint ("ERROR: No insertions to process!", error=True)
     else:
         all_insertion_lines = sorted(list(set(d.temper_lines + d.dip_lines)))
         # combine the dictionaries of insertion points
@@ -670,12 +698,16 @@ def prepare_insertions(d):
 
     # shift location of output down by one line to ensure it maps to the right line of output code
     d.final_insertion_list.append(None)  # important!
+
+
+
     for line_number in range(0, d.linecount):
-        if line_number in all_insertion_lines:
+        try:
+            #skipping check for key in source dict to improve performance.
             charpos = d.linebreak_list[line_number]
             output_gcode = blended_dict[charpos]["output_gcode"]
             d.final_insertion_list.append(output_gcode.strip())
-        else:
+        except:
             d.final_insertion_list.append(None)
 
 
@@ -698,7 +730,7 @@ def assemble_final_output(d):
             for subline in insline.splitlines():
                 d.output_lines.append(subline + "\n")
         d.output_lines.append(orgline)
-    lprint(d.output_lines, False)
+    #lprint(d.output_lines, False)
 
 
 # ANALYSIS FUNCTIONS *********************************************************
@@ -823,7 +855,7 @@ def clean_settings(d):
     d.apply_automatic_values()
 
 
-def auto_calculate_insertion_length(d):
+def auto_calculate_insertion_distance(d):
     """
     See detailed diagram at the bottom of this file for more information about this calculation.
     :param d: SetupData
@@ -833,7 +865,7 @@ def auto_calculate_insertion_length(d):
     tube_length = float(d.gcode_vars['cooling_tube_length'])
     insertion_distance = tube_pos + (0.5 * tube_length) - 1.5
     d.auto_insertion_distance = insertion_distance + AUTO_INSERTION_DISTANCE_TWEAK
-    lprint("Based on the data in this gcode file, your suggested insertion_length is %.1f" % d.auto_insertion_distance)
+    lprint("Based on the data in this gcode file, your suggested insertion_distance is %.1f" % d.auto_insertion_distance)
     return d.auto_insertion_distance
 
 
@@ -872,7 +904,6 @@ def get_settings(d):
             if chunk is not None:
                 toolname = str(chunk.group('previous_tool')).strip()
                 config_string = chunk.group('parameters')
-                lprint("ADDED data from chunk: " + str(chunkNum) + " previous_tool:" + toolname, False)
                 config_strings[toolname] = config_string
                 if toolname not in d.configured_tools:
                     d.configured_tools.append(toolname)
@@ -881,7 +912,6 @@ def get_settings(d):
                     lprint("Configured tools is now" + str(d.configured_tools), False)
     lprint("  finished scanning configuration strings.", False)
     lprint("  Configured extruders: " + str(d.configured_tools))
-    lprint(pprint.pformat(config_strings), False)
     lprint("  Extracting settings dictionaries from config strings", False)
     for tool in d.configured_tools:
         tool_param_dict = {}
@@ -970,13 +1000,10 @@ def get_insertion_points(d):
             lprint(str(e), error=True)
 
 
-    lprint("dip postitions:\n" + str(d.dip_positions), False)
-    lprint("dip_index:\n" + pprint.pformat(d.dip_index), False)
+    #lprint("dip postitions:\n" + str(d.dip_positions), False)
     spos = d.dip_positions
     sposlen = len(d.dip_positions)
     diplen = len(d.dip_index.keys())
-    lprint("dip positions has " + str(sposlen) + " elements:", False)
-    lprint("\n" + pprint.pformat(spos) + "\n", False)
     lprint("  dip index has " + str(diplen) + " elements")
     lprint("\n" + pprint.pformat(sorted(d.dip_index)) + "\n", False)
     return 0
@@ -990,7 +1017,7 @@ def get_temperature_change_positions(d):
     in the SetupData object
     """
     # scan for temperature change patterns
-    matches = re.finditer(TOOLCHANGE_TEMP_REGEX, d.gcode_str)
+    matches = re.finditer(START_TEMPCHANGE_REGEX, d.gcode_str)
     for matchNum, match in enumerate(matches, start=1):
         if match is not None:
             changepos = int(match.start('temp_start'))
@@ -1019,7 +1046,7 @@ def get_temperature_change_positions(d):
                 d.temper_lines.append(line_number)
     temperlen = str(len(d.temper_index.keys()))
     lprint("  Temperature drop index has " + temperlen + " elements")
-    lprint("\n" + pprint.pformat(d.temper_index) + "\n", False)
+    lprint("\n" + pprint.pformat(d.temper_index.keys()) + "\n", False)
 
 
 def get_extruder_settings(d):
@@ -1056,7 +1083,7 @@ def main(target_file=None):
     d.init_log_file("skinnydip.log")
     lprint("Looking up extruder settings")
     get_extruder_settings(d)
-    auto_calculate_insertion_length(d)
+    auto_calculate_insertion_distance(d)
     lprint("Indexing linebreaks")
     index_linebreaks(d)
     lprint("Indexing toolchanges...")
