@@ -1,4 +1,4 @@
-# SKINNYDIP MMU2 string eliminator v1.0.4 beta
+# SKINNYDIP MMU2 string eliminator v1.0.5 beta
 a post processing script for Slic3r PE / PrusaSlicer to remove fine threads from filament tips during MMU2 toolchanges.
 Written by Erik Bjorgan based on a core concept from David Shealey.
 With love to the Prusa Community Forum and its incredible admin team.
