@@ -118,10 +118,4 @@ beep_on_dip       | Play a tone through the printer's speaker to signal when a s
 beep_on_temp      | Play a tone when a toolchange temperature setting has been applied (for debug purposes)  | off (off/on)|
                   
 ## Goals:
-This method is highly effective for removing fine strings of filament.
-This script is intended as a proof of concept, with the hopes that this
-functionality would be added to a future revision of Slic3r PE / PrusaSlicer.
-
-
-
-
+This method is highly effective for removing fine strings of filament, but my hope is that this script will only be needed for a short time.  My ultimate goal is to integrate these features into Slic3r/PrusaSlicer, for both ease of use and accuracy of output.  I have taken up this project myself and am getting close to an alpha build being ready for those who are able to compile PrusaSlicer from source - hopefully the MMU2 community can persuade Prusa to officially adopt it so that more of you will be able to make use of it.
