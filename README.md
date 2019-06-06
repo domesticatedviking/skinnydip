@@ -4,6 +4,9 @@ Written by Erik Bjorgan based on a core concept from David Shealey.
 With love to the Prusa Community Forum and its incredible admin team.
 http://facebook.com/groups/prusacommunity
 
+# Announcement:
+For those capable of building PrusaSlicer from source, check out this [experimental branch](https://github.com/domesticatedviking/PrusaSlicer/tree/skinnydip-integrated) that [integrates Skinnydip's functions into the advanced filament settings menu](https://i.ibb.co/ysHZNSg/skinnydip-integrated.png).  No more post processing scripts or configuration comments!  Sadly, I'm not going to be able to commit to continuously integrating this as PrusaSlicer moves forward, nor do I have the capacity to provide compiled binaries for all the platforms at this time.  If you wish to see this feature in an official build, I suggest you leave a polite comment [here](https://github.com/prusa3d/PrusaSlicer/issues/2385).    
+  
 # While this tool is becoming more and more stable, it is still experimental.  Use it at your own risk! 
 Tested with the following versions of Slic3r PE:
 * 1.41.2+linux64
@@ -118,4 +121,4 @@ beep_on_dip       | Play a tone through the printer's speaker to signal when a s
 beep_on_temp      | Play a tone when a toolchange temperature setting has been applied (for debug purposes)  | off (off/on)|
                   
 ## Goals:
-This method is highly effective for removing fine strings of filament, but my hope is that this script will only be needed for a short time.  My ultimate goal is to integrate these features into Slic3r/PrusaSlicer, for both ease of use and accuracy of output.  I have taken up this project myself and am getting close to an alpha build being ready for those who are able to compile PrusaSlicer from source - hopefully the MMU2 community can persuade Prusa to officially adopt it so that more of you will be able to make use of it.
+This method is highly effective for removing fine strings of filament, but my hope is that this script will only be needed for a short time.  My ultimate goal is to integrate these features into Slic3r/PrusaSlicer, for both ease of use and accuracy of output.  
