@@ -35,7 +35,7 @@ In Slic3rPE or PrusaSlicer's Print Settings > Output Options > Post Processing S
 ```C:\python27\python.exe C:\my\folder\skinnydip.py```
 
 #### New:  Batch file for Windows users (recommended)
-Some Windows users were reporting that parameters weren't being picked up correctly when filenames contained spaces.   This was determined to be due to [an issue with Slic3r PE](https://github.com/slic3r/Slic3r/issues/4000).  The included batch file (skinnydip.bat) should be saved in the same directory as skinnydip.py.  It attempts to locate your python installation automatically.   To call skinnydip with the windows batch file, in Slic3rPE > Print Settings > Output Options > Post Processing Scripts, use the following:
+Some Windows users were reporting that parameters weren't being picked up correctly when filenames contained spaces.   This was determined to be due to [an issue with Slic3r PE](https://github.com/slic3r/Slic3r/issues/4000).  The included batch file (skinnydip.bat) should be saved in the same directory as skinnydip.py.  It attempts to locate your python installation automatically.   To call skinnydip with the windows batch file, in Slic3rPE > Print Settings > Output Options > Post Processing Scripts, use the following (change ```\path\to\``` to the actual directory first!)
 
 ```\path\to\skinnydip.bat```
 
@@ -45,7 +45,7 @@ This batch file also includes a pause at the end so that you can see the output 
 
 ### Linux / Mac
 In Slic3r PE, provide the absolute path to the skinnydip.py script in Print Settings > Output Options > Post-processing scripts.     
-eg.  ```/home/username/some_folder/skinnydip.py```
+for example:  ```/home/username/some_folder/skinnydip.py```
 ##### Known issue with installation on Linux appimage builds
 At the time of this initial release some Linux appimage builds of Slic3r PE are misconfigured in a way that prevents running Python scripts directly.  Use ```/home/username/skinnydip_appimage_workaround.sh``` in the post processing script field instead.  This script should be located in the same folder as skinnydip.py
 ##### Permissions:
