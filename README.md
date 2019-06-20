@@ -5,7 +5,9 @@ With love to the Prusa Community Forum and its incredible admin team.
 http://facebook.com/groups/prusacommunity
 
 # Announcement:
-For those capable of building PrusaSlicer from source, check out this [experimental branch](https://github.com/domesticatedviking/PrusaSlicer/tree/skinnydip-integrated) that [integrates Skinnydip's functions into the advanced filament settings menu](https://i.ibb.co/ysHZNSg/skinnydip-integrated.png).  No more post processing scripts or configuration comments!  Sadly, I'm not going to be able to commit to continuously integrating this as PrusaSlicer moves forward, nor do I have the capacity to provide compiled binaries for all the platforms at this time.  If you wish to see this feature in an official build, I suggest you leave a polite comment [here](https://github.com/prusa3d/PrusaSlicer/issues/2385).    
+For those capable of building PrusaSlicer from source, check out this [experimental branch](https://github.com/domesticatedviking/PrusaSlicer/tree/skinnydip-integrated) that [integrates Skinnydip's functions into the advanced filament settings menu](https://i.ibb.co/ysHZNSg/skinnydip-integrated.png).  No more post processing scripts or configuration comments!  If you wish to see this feature in an official build, I suggest you leave a polite comment [here](https://github.com/prusa3d/PrusaSlicer/issues/2385).   
+
+I am working on getting some binaries of the integrated version together.  Watch this space for updates.
   
 # This tool is experimental.  Use it at your own risk! 
 Tested with the following versions of Slic3r PE:
