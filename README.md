@@ -1,13 +1,22 @@
+# Announcement:
+This script has fulfilled its goal of being a proof of concept, however, the heuristics it uses to find necessary gcode injection locations are not 100% accurate.   Perhaps with sufficient research the regular expressions that are used could make this a more complete solution, but there isn't really any good reason for the effort it would take to do that now that branches of prusaslicer that incorporate these routines exist.
+
+[Antimix](https://github.com/antimix) has recently integrated these routines into his fork of Prusaslicer 2.1.0.   https://github.com/antimix/PrusaSlicer/releases/tag/Skinnydip_2.1.0  - there is currently a build for Windows also hosted there. 
+
+Here's a link to my original [experimental branch](https://github.com/domesticatedviking/PrusaSlicer/tree/skinnydip-integrated) that [integrates Skinnydip's functions into the advanced filament settings menu](https://i.ibb.co/ysHZNSg/skinnydip-integrated.png) 
+
+ If you wish to see this feature in an official build, I suggest you leave a polite comment [here](https://github.com/prusa3d/PrusaSlicer/issues/2385).   
+
+I am not in a position to provide binaries for Linux or Mac, but if you are willing to help with building those, I would be happy to hear from you.
+
+
+# The docs below are for the (now no longer maintained) python post-processing script
 # SKINNYDIP MMU2 string eliminator v1.0.5 beta
 a post processing script for Slic3r PE / PrusaSlicer to remove fine threads from filament tips during MMU2 toolchanges.
 Written by Erik Bjorgan based on a core concept from David Shealey.
 With love to the Prusa Community Forum and its incredible admin team.
 http://facebook.com/groups/prusacommunity
 
-# Announcement:
-For those capable of building PrusaSlicer from source, check out this [experimental branch](https://github.com/domesticatedviking/PrusaSlicer/tree/skinnydip-integrated) that [integrates Skinnydip's functions into the advanced filament settings menu](https://i.ibb.co/ysHZNSg/skinnydip-integrated.png).  No more post processing scripts or configuration comments!  If you wish to see this feature in an official build, I suggest you leave a polite comment [here](https://github.com/prusa3d/PrusaSlicer/issues/2385).   
-
-I am working on getting some binaries of the integrated version together.  Watch this space for updates.
   
 # This tool is experimental.  Use it at your own risk! 
 Tested with the following versions of Slic3r PE:
