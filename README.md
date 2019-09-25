@@ -1,16 +1,17 @@
 # Announcement:
-This script has fulfilled its goal of being a proof of concept, however, the heuristics it uses to find necessary gcode injection locations are not 100% accurate.   Perhaps with sufficient research the regular expressions that are used could make this a more complete solution, but there isn't really any good reason for the effort it would take to do that now that branches of prusaslicer that incorporate these routines exist.
+With the release for PrusaSlicer 2.1.0, it was time for an update of PrusaSlicer-Skinnydip Edition
+Thanks to [Antimix](https://github.com/antimix) for doing most of the work on this integration.
+I've also added a "Fast Mode" feature (credits to David Shealey for this - he has been wanting it for quite some time)
 
-[Antimix](https://github.com/antimix) has recently integrated these routines into his fork of Prusaslicer 2.1.0.   https://github.com/antimix/PrusaSlicer/releases/tag/Skinnydip_2.1.0  - there is currently a build for Windows also hosted there. 
-
-Here's a link to my original [experimental branch](https://github.com/domesticatedviking/PrusaSlicer/tree/skinnydip-integrated) that [integrates Skinnydip's functions into the advanced filament settings menu](https://i.ibb.co/ysHZNSg/skinnydip-integrated.png) 
+From now on, prusaSlicer-Skinnydip Edition builds will be available here. 
+https://github.com/domesticatedviking/PrusaSlicer/releases/
 
  If you wish to see this feature in an official build, I suggest you leave a polite comment [here](https://github.com/prusa3d/PrusaSlicer/issues/2385).   
 
-I am not in a position to provide binaries for Linux or Mac, but if you are willing to help with building those, I would be happy to hear from you.
-
 
 # The docs below are for the (now no longer maintained) python post-processing script
+This script has fulfilled its goal of being a proof of concept, however, the heuristics it uses to find necessary gcode injection locations are not 100% accurate.   Perhaps with sufficient research the regular expressions that are used could make this a more complete solution, but there isn't really any good reason for the effort it would take to do that now that branches of prusaslicer that incorporate these routines exist.
+
 # SKINNYDIP MMU2 string eliminator v1.0.5 beta
 a post processing script for Slic3r PE / PrusaSlicer to remove fine threads from filament tips during MMU2 toolchanges.
 Written by Erik Bjorgan based on a core concept from David Shealey.
