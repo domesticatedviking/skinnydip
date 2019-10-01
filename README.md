@@ -5,6 +5,8 @@ I've also added a "Fast Mode" feature (credits to David Shealey for this - he ha
 
 From now on, prusaSlicer-Skinnydip Edition builds will be available here. 
 https://github.com/domesticatedviking/PrusaSlicer/releases/
+Currently, there are Windows, Mac, and Linux builds there based on Prusaslicer 2.1.0.
+There are also Windows and Linux builds based on Supermerril's excellent Slic3r++ (2.0.0-1)
 
  If you wish to see this feature in an official build, I suggest you leave a polite comment [here](https://github.com/prusa3d/PrusaSlicer/issues/2385).   
 
