@@ -1,18 +1,10 @@
 # Announcement:
-With the release for PrusaSlicer 2.1.0, it was time for an update of PrusaSlicer-Skinnydip Edition
-Thanks to [Antimix](https://github.com/antimix) for doing most of the work on this integration.
-I've also added a "Fast Mode" feature (credits to David Shealey for this - he has been wanting it for quite some time)
+Skinnydip is now as a built in feature for SuperSlicer (formerly Slic3r++) which can be downloaded [here](https://github.com/supermerill/Slic3r/releases).   Many thanks to Supermerill for his tremendous work over the years adding experimental features to our beloved PrusaSlicer.
 
-Currently, Windows, Mac, and Linux versions of PrusaSlicer-Skinnydip Edition are available here:
-https://github.com/domesticatedviking/PrusaSlicer/releases/
-There are also builds based on Supermerill's excellent Slic3r++.    
-(08/10/2019) Great news! Supermerill has committed the skinnydip routines into Slic3r++, which means that these routines should be available in future releases [here](https://github.com/supermerill/Slic3r/releases).
-
- If you wish to see this feature in an official build of PrusaSlicer, I suggest you leave a polite comment [here](https://github.com/prusa3d/PrusaSlicer/issues/2385).   
-
+ If you wish to see Skinnydip in an official build of PrusaSlicer, I suggest you leave a polite comment [here](https://github.com/prusa3d/PrusaSlicer/issues/2385). 
 
 # The docs below are for the (now no longer maintained) python post-processing script
-This script has fulfilled its goal of being a proof of concept, however, the heuristics it uses to find necessary gcode injection locations are not 100% accurate.   Perhaps with sufficient research the regular expressions that are used could make this a more complete solution, but there isn't really any good reason for the effort it would take to do that now that branches of prusaslicer that incorporate these routines exist.
+This script has fulfilled its goal of being a proof of concept, however, the heuristics it uses to find necessary gcode injection locations are not 100% accurate.   Perhaps with sufficient research the regular expressions that are used could make this a more complete solution, but there isn't really any good reason for the effort it would take to do that now that there is a robust and reliable solution in SuperSlicer.
 
 # SKINNYDIP MMU2 string eliminator v1.0.5 beta
 a post processing script for Slic3r PE / PrusaSlicer to remove fine threads from filament tips during MMU2 toolchanges.
@@ -21,7 +13,7 @@ With love to the Prusa Community Forum and its incredible admin team.
 http://facebook.com/groups/prusacommunity
 
   
-# This tool is experimental.  Use it at your own risk! 
+# This tool is experimental, unmaintained, deprecated, and does not always work consistently.  Use it at your own risk -- better yet, use SuperSlicer! 
 Tested with the following versions of Slic3r PE:
 * 1.41.2+linux64
 * 1.42.0-alpha7+linux64
