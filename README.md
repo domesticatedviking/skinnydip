@@ -1,5 +1,5 @@
 # Announcement:
-Skinnydip is now as a built in feature for SuperSlicer (formerly Slic3r++) which can be downloaded [here](https://github.com/supermerill/Slic3r/releases).   Many thanks to Supermerill for his tremendous work over the years adding experimental features to our beloved PrusaSlicer.
+Skinnydip is now a built in feature for SuperSlicer (formerly Slic3r++) which can be downloaded [here](https://github.com/supermerill/Slic3r/releases).   Many thanks to Supermerill for his tremendous work over the years adding experimental features to our beloved PrusaSlicer.
 
  If you wish to see Skinnydip in an official build of PrusaSlicer, I suggest you leave a polite comment [here](https://github.com/prusa3d/PrusaSlicer/issues/2385). 
 
