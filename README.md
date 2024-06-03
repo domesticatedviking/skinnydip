@@ -1,3 +1,7 @@
+# We did it!
+On March 20, 2024, Prusa incorporated its own version of Skinnydip in firmware 2.7.3-alpha1.
+Gratitude to Prusa for acknowledging this project in the release notes.  Prusa devs are classy. https://github.com/prusa3d/PrusaSlicer/releases/tag/version_2.7.3-alpha1
+
 # Announcement:
 Skinnydip is now a built in feature for SuperSlicer (formerly Slic3r++) which can be downloaded [here](https://github.com/supermerill/Slic3r/releases).   Many thanks to Supermerill for his tremendous work over the years adding experimental features to our beloved PrusaSlicer.
 
